@@ -398,6 +398,8 @@ body {
   transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
   position: relative;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }
 
 .kanban-card:hover {
@@ -408,6 +410,20 @@ body {
 
 .kanban-card:active {
   cursor: grabbing;
+}
+
+.card-drag-grip {
+  color: var(--text-subtle);
+  font-size: 0.85rem;
+  cursor: grab;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.card-drag-grip:hover {
+  color: var(--primary);
+  background: var(--primary-light);
 }
 
 /* jQuery UI Dragging State */

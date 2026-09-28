@@ -5,7 +5,7 @@
  * Concepts Covered:
  * - jQuery Selectors: $('.kanban-card[data-id]'), $('.column[data-stage="..."]')
  * - DOM Traversing: $(this).closest('.column').data('stage'), .find(), .parent()
- * - jQuery UI Sortable: connectWith, placeholder, revert, start/receive/stop
+ * - jQuery UI Sortable: connectWith, placeholder, revert, distance, start/receive/stop
  * - jQuery Effects: highlight drop zone, pulse card on drop, fade/slide animations
  * - AJAX Calls: PATCH /candidates/:id, GET, POST with JSON Server
  * - LocalStorage sync fallback for offline/direct file execution
@@ -20,6 +20,698 @@ const API_BASE_URL = 'http://localhost:3000';
 const STORAGE_KEY = 'payroll_recruitment_candidates_v1';
 const WIP_LIMIT_INTERVIEW = 10;
 
+// Embedded Seed Data (Ensures 100% reliable load even if file:/// CORS blocks db.json)
+const SEED_CANDIDATES = [
+  {
+    "id": 201,
+    "name": "Priya Sharma",
+    "role": "Frontend Dev",
+    "stage": "screening",
+    "score": 8.2,
+    "interviewDate": "2025-11-18",
+    "resumeUrl": "#",
+    "email": "priya.sharma@example.com",
+    "history": [
+      "2025-11-10: Applied for Frontend Dev",
+      "2025-11-12: Moved to Screening"
+    ]
+  },
+  {
+    "id": 202,
+    "name": "Rahul Reddy",
+    "role": "QA Engineer",
+    "stage": "screening",
+    "score": 9.4,
+    "interviewDate": "2025-12-11",
+    "resumeUrl": "#",
+    "email": "rahul.reddy202@example.com",
+    "history": [
+      "2025-10-15: Applied for QA Engineer",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 203,
+    "name": "Amit Joshi",
+    "role": "Backend Dev",
+    "stage": "interview",
+    "score": 7.2,
+    "interviewDate": "2025-10-16",
+    "resumeUrl": "#",
+    "email": "amit.joshi203@example.com",
+    "history": [
+      "2025-10-15: Applied for Backend Dev",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 204,
+    "name": "Sneha Bhatia",
+    "role": "Payroll Specialist",
+    "stage": "hired_rejected",
+    "score": 8.9,
+    "interviewDate": "2025-11-21",
+    "resumeUrl": "#",
+    "email": "sneha.bhatia204@example.com",
+    "history": [
+      "2025-10-15: Applied for Payroll Specialist",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 205,
+    "name": "Vikram Das",
+    "role": "DevOps Engineer",
+    "stage": "applied",
+    "score": 6.7,
+    "interviewDate": "2025-12-26",
+    "resumeUrl": "#",
+    "email": "vikram.das205@example.com",
+    "history": [
+      "2025-10-15: Applied for DevOps Engineer"
+    ]
+  },
+  {
+    "id": 206,
+    "name": "Ananya Rao",
+    "role": "Full Stack Dev",
+    "stage": "screening",
+    "score": 8.4,
+    "interviewDate": "2025-10-03",
+    "resumeUrl": "#",
+    "email": "ananya.rao206@example.com",
+    "history": [
+      "2025-10-15: Applied for Full Stack Dev",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 207,
+    "name": "Rohan Verma",
+    "role": "HR Executive",
+    "stage": "interview",
+    "score": 6.2,
+    "interviewDate": "2025-11-08",
+    "resumeUrl": "#",
+    "email": "rohan.verma207@example.com",
+    "history": [
+      "2025-10-15: Applied for HR Executive",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 208,
+    "name": "Kavita Gupta",
+    "role": "Product Manager",
+    "stage": "hired_rejected",
+    "score": 7.9,
+    "interviewDate": "2025-12-13",
+    "resumeUrl": "#",
+    "email": "kavita.gupta208@example.com",
+    "history": [
+      "2025-10-15: Applied for Product Manager",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 209,
+    "name": "Suresh Mehta",
+    "role": "UI/UX Designer",
+    "stage": "applied",
+    "score": 9.6,
+    "interviewDate": "2025-10-18",
+    "resumeUrl": "#",
+    "email": "suresh.mehta209@example.com",
+    "history": [
+      "2025-10-15: Applied for UI/UX Designer"
+    ]
+  },
+  {
+    "id": 210,
+    "name": "Neha Chopra",
+    "role": "Frontend Dev",
+    "stage": "screening",
+    "score": 7.4,
+    "interviewDate": "2025-11-23",
+    "resumeUrl": "#",
+    "email": "neha.chopra210@example.com",
+    "history": [
+      "2025-10-15: Applied for Frontend Dev",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 211,
+    "name": "Arjun Saxena",
+    "role": "Data Analyst",
+    "stage": "interview",
+    "score": 9.1,
+    "interviewDate": "2025-12-28",
+    "resumeUrl": "#",
+    "email": "arjun.saxena211@example.com",
+    "history": [
+      "2025-10-15: Applied for Data Analyst",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 212,
+    "name": "Pooja Iyer",
+    "role": "QA Engineer",
+    "stage": "hired_rejected",
+    "score": 6.9,
+    "interviewDate": "2025-10-05",
+    "resumeUrl": "#",
+    "email": "pooja.iyer212@example.com",
+    "history": [
+      "2025-10-15: Applied for QA Engineer",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 213,
+    "name": "Manish Yadav",
+    "role": "Backend Dev",
+    "stage": "applied",
+    "score": 8.6,
+    "interviewDate": "2025-11-10",
+    "resumeUrl": "#",
+    "email": "manish.yadav213@example.com",
+    "history": [
+      "2025-10-15: Applied for Backend Dev"
+    ]
+  },
+  {
+    "id": 214,
+    "name": "Deepika Patel",
+    "role": "Payroll Specialist",
+    "stage": "screening",
+    "score": 6.4,
+    "interviewDate": "2025-12-15",
+    "resumeUrl": "#",
+    "email": "deepika.patel214@example.com",
+    "history": [
+      "2025-10-15: Applied for Payroll Specialist",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 215,
+    "name": "Aditya Kumar",
+    "role": "DevOps Engineer",
+    "stage": "interview",
+    "score": 8.1,
+    "interviewDate": "2025-10-20",
+    "resumeUrl": "#",
+    "email": "aditya.kumar215@example.com",
+    "history": [
+      "2025-10-15: Applied for DevOps Engineer",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 216,
+    "name": "Ritu Nair",
+    "role": "Full Stack Dev",
+    "stage": "hired_rejected",
+    "score": 9.8,
+    "interviewDate": "2025-11-25",
+    "resumeUrl": "#",
+    "email": "ritu.nair216@example.com",
+    "history": [
+      "2025-10-15: Applied for Full Stack Dev",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 217,
+    "name": "Karan Malhotra",
+    "role": "HR Executive",
+    "stage": "applied",
+    "score": 7.6,
+    "interviewDate": "2025-12-02",
+    "resumeUrl": "#",
+    "email": "karan.malhotra217@example.com",
+    "history": [
+      "2025-10-15: Applied for HR Executive"
+    ]
+  },
+  {
+    "id": 218,
+    "name": "Meera Deshmukh",
+    "role": "Product Manager",
+    "stage": "screening",
+    "score": 9.3,
+    "interviewDate": "2025-10-07",
+    "resumeUrl": "#",
+    "email": "meera.deshmukh218@example.com",
+    "history": [
+      "2025-10-15: Applied for Product Manager",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 219,
+    "name": "Nikhil Menon",
+    "role": "UI/UX Designer",
+    "stage": "interview",
+    "score": 7.1,
+    "interviewDate": "2025-11-12",
+    "resumeUrl": "#",
+    "email": "nikhil.menon219@example.com",
+    "history": [
+      "2025-10-15: Applied for UI/UX Designer",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 220,
+    "name": "Divya Sharma",
+    "role": "Frontend Dev",
+    "stage": "hired_rejected",
+    "score": 8.8,
+    "interviewDate": "2025-12-17",
+    "resumeUrl": "#",
+    "email": "divya.sharma220@example.com",
+    "history": [
+      "2025-10-15: Applied for Frontend Dev",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 221,
+    "name": "Siddharth Singh",
+    "role": "Data Analyst",
+    "stage": "applied",
+    "score": 6.6,
+    "interviewDate": "2025-10-22",
+    "resumeUrl": "#",
+    "email": "siddharth.singh221@example.com",
+    "history": [
+      "2025-10-15: Applied for Data Analyst"
+    ]
+  },
+  {
+    "id": 222,
+    "name": "Tanvi Reddy",
+    "role": "QA Engineer",
+    "stage": "screening",
+    "score": 8.3,
+    "interviewDate": "2025-11-27",
+    "resumeUrl": "#",
+    "email": "tanvi.reddy222@example.com",
+    "history": [
+      "2025-10-15: Applied for QA Engineer",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 223,
+    "name": "Varun Joshi",
+    "role": "Backend Dev",
+    "stage": "interview",
+    "score": 6.1,
+    "interviewDate": "2025-12-04",
+    "resumeUrl": "#",
+    "email": "varun.joshi223@example.com",
+    "history": [
+      "2025-10-15: Applied for Backend Dev",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 224,
+    "name": "Isha Bhatia",
+    "role": "Payroll Specialist",
+    "stage": "hired_rejected",
+    "score": 7.8,
+    "interviewDate": "2025-10-09",
+    "resumeUrl": "#",
+    "email": "isha.bhatia224@example.com",
+    "history": [
+      "2025-10-15: Applied for Payroll Specialist",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 225,
+    "name": "Abhishek Das",
+    "role": "DevOps Engineer",
+    "stage": "applied",
+    "score": 9.5,
+    "interviewDate": "2025-11-14",
+    "resumeUrl": "#",
+    "email": "abhishek.das225@example.com",
+    "history": [
+      "2025-10-15: Applied for DevOps Engineer"
+    ]
+  },
+  {
+    "id": 226,
+    "name": "Swati Rao",
+    "role": "Full Stack Dev",
+    "stage": "screening",
+    "score": 7.3,
+    "interviewDate": "2025-12-19",
+    "resumeUrl": "#",
+    "email": "swati.rao226@example.com",
+    "history": [
+      "2025-10-15: Applied for Full Stack Dev",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 227,
+    "name": "Gaurav Verma",
+    "role": "HR Executive",
+    "stage": "interview",
+    "score": 9,
+    "interviewDate": "2025-10-24",
+    "resumeUrl": "#",
+    "email": "gaurav.verma227@example.com",
+    "history": [
+      "2025-10-15: Applied for HR Executive",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 228,
+    "name": "Shweta Gupta",
+    "role": "Product Manager",
+    "stage": "hired_rejected",
+    "score": 6.8,
+    "interviewDate": "2025-11-01",
+    "resumeUrl": "#",
+    "email": "shweta.gupta228@example.com",
+    "history": [
+      "2025-10-15: Applied for Product Manager",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 229,
+    "name": "Rajesh Mehta",
+    "role": "UI/UX Designer",
+    "stage": "applied",
+    "score": 8.5,
+    "interviewDate": "2025-12-06",
+    "resumeUrl": "#",
+    "email": "rajesh.mehta229@example.com",
+    "history": [
+      "2025-10-15: Applied for UI/UX Designer"
+    ]
+  },
+  {
+    "id": 230,
+    "name": "Preeti Chopra",
+    "role": "Frontend Dev",
+    "stage": "screening",
+    "score": 6.3,
+    "interviewDate": "2025-10-11",
+    "resumeUrl": "#",
+    "email": "preeti.chopra230@example.com",
+    "history": [
+      "2025-10-15: Applied for Frontend Dev",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 231,
+    "name": "Harsh Saxena",
+    "role": "Data Analyst",
+    "stage": "interview",
+    "score": 8,
+    "interviewDate": "2025-11-16",
+    "resumeUrl": "#",
+    "email": "harsh.saxena231@example.com",
+    "history": [
+      "2025-10-15: Applied for Data Analyst",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 232,
+    "name": "Simran Iyer",
+    "role": "QA Engineer",
+    "stage": "hired_rejected",
+    "score": 9.7,
+    "interviewDate": "2025-12-21",
+    "resumeUrl": "#",
+    "email": "simran.iyer232@example.com",
+    "history": [
+      "2025-10-15: Applied for QA Engineer",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 233,
+    "name": "Akash Yadav",
+    "role": "Backend Dev",
+    "stage": "applied",
+    "score": 7.5,
+    "interviewDate": "2025-10-26",
+    "resumeUrl": "#",
+    "email": "akash.yadav233@example.com",
+    "history": [
+      "2025-10-15: Applied for Backend Dev"
+    ]
+  },
+  {
+    "id": 234,
+    "name": "Shruti Patel",
+    "role": "Payroll Specialist",
+    "stage": "screening",
+    "score": 9.2,
+    "interviewDate": "2025-11-03",
+    "resumeUrl": "#",
+    "email": "shruti.patel234@example.com",
+    "history": [
+      "2025-10-15: Applied for Payroll Specialist",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 235,
+    "name": "Kartik Kumar",
+    "role": "DevOps Engineer",
+    "stage": "interview",
+    "score": 7,
+    "interviewDate": "2025-12-08",
+    "resumeUrl": "#",
+    "email": "kartik.kumar235@example.com",
+    "history": [
+      "2025-10-15: Applied for DevOps Engineer",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 236,
+    "name": "Bhavna Nair",
+    "role": "Full Stack Dev",
+    "stage": "hired_rejected",
+    "score": 8.7,
+    "interviewDate": "2025-10-13",
+    "resumeUrl": "#",
+    "email": "bhavna.nair236@example.com",
+    "history": [
+      "2025-10-15: Applied for Full Stack Dev",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 237,
+    "name": "Mayank Malhotra",
+    "role": "HR Executive",
+    "stage": "applied",
+    "score": 6.5,
+    "interviewDate": "2025-11-18",
+    "resumeUrl": "#",
+    "email": "mayank.malhotra237@example.com",
+    "history": [
+      "2025-10-15: Applied for HR Executive"
+    ]
+  },
+  {
+    "id": 238,
+    "name": "Pallavi Deshmukh",
+    "role": "Product Manager",
+    "stage": "screening",
+    "score": 8.2,
+    "interviewDate": "2025-12-23",
+    "resumeUrl": "#",
+    "email": "pallavi.deshmukh238@example.com",
+    "history": [
+      "2025-10-15: Applied for Product Manager",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 239,
+    "name": "Sachin Menon",
+    "role": "UI/UX Designer",
+    "stage": "interview",
+    "score": 9.9,
+    "interviewDate": "2025-10-28",
+    "resumeUrl": "#",
+    "email": "sachin.menon239@example.com",
+    "history": [
+      "2025-10-15: Applied for UI/UX Designer",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 240,
+    "name": "Komal Sharma",
+    "role": "Frontend Dev",
+    "stage": "hired_rejected",
+    "score": 7.7,
+    "interviewDate": "2025-11-05",
+    "resumeUrl": "#",
+    "email": "komal.sharma240@example.com",
+    "history": [
+      "2025-10-15: Applied for Frontend Dev",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 241,
+    "name": "Prateek Singh",
+    "role": "Data Analyst",
+    "stage": "applied",
+    "score": 9.4,
+    "interviewDate": "2025-12-10",
+    "resumeUrl": "#",
+    "email": "prateek.singh241@example.com",
+    "history": [
+      "2025-10-15: Applied for Data Analyst"
+    ]
+  },
+  {
+    "id": 242,
+    "name": "Monika Reddy",
+    "role": "QA Engineer",
+    "stage": "screening",
+    "score": 7.2,
+    "interviewDate": "2025-10-15",
+    "resumeUrl": "#",
+    "email": "monika.reddy242@example.com",
+    "history": [
+      "2025-10-15: Applied for QA Engineer",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 243,
+    "name": "Vishal Joshi",
+    "role": "Backend Dev",
+    "stage": "interview",
+    "score": 8.9,
+    "interviewDate": "2025-11-20",
+    "resumeUrl": "#",
+    "email": "vishal.joshi243@example.com",
+    "history": [
+      "2025-10-15: Applied for Backend Dev",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 244,
+    "name": "Aarti Bhatia",
+    "role": "Payroll Specialist",
+    "stage": "hired_rejected",
+    "score": 6.7,
+    "interviewDate": "2025-12-25",
+    "resumeUrl": "#",
+    "email": "aarti.bhatia244@example.com",
+    "history": [
+      "2025-10-15: Applied for Payroll Specialist",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 245,
+    "name": "Kunal Das",
+    "role": "DevOps Engineer",
+    "stage": "applied",
+    "score": 8.4,
+    "interviewDate": "2025-10-02",
+    "resumeUrl": "#",
+    "email": "kunal.das245@example.com",
+    "history": [
+      "2025-10-15: Applied for DevOps Engineer"
+    ]
+  },
+  {
+    "id": 246,
+    "name": "Rashmi Rao",
+    "role": "Full Stack Dev",
+    "stage": "screening",
+    "score": 6.2,
+    "interviewDate": "2025-11-07",
+    "resumeUrl": "#",
+    "email": "rashmi.rao246@example.com",
+    "history": [
+      "2025-10-15: Applied for Full Stack Dev",
+      "2025-11-01: Moved to Screening"
+    ]
+  },
+  {
+    "id": 247,
+    "name": "Tarun Verma",
+    "role": "HR Executive",
+    "stage": "interview",
+    "score": 7.9,
+    "interviewDate": "2025-12-12",
+    "resumeUrl": "#",
+    "email": "tarun.verma247@example.com",
+    "history": [
+      "2025-10-15: Applied for HR Executive",
+      "2025-11-01: Moved to Interview"
+    ]
+  },
+  {
+    "id": 248,
+    "name": "Payal Gupta",
+    "role": "Product Manager",
+    "stage": "hired_rejected",
+    "score": 9.6,
+    "interviewDate": "2025-10-17",
+    "resumeUrl": "#",
+    "email": "payal.gupta248@example.com",
+    "history": [
+      "2025-10-15: Applied for Product Manager",
+      "2025-11-01: Moved to Hired/rejected"
+    ]
+  },
+  {
+    "id": 249,
+    "name": "Alok Mehta",
+    "role": "UI/UX Designer",
+    "stage": "applied",
+    "score": 7.4,
+    "interviewDate": "2025-11-22",
+    "resumeUrl": "#",
+    "email": "alok.mehta249@example.com",
+    "history": [
+      "2025-10-15: Applied for UI/UX Designer"
+    ]
+  },
+  {
+    "id": 250,
+    "name": "Sunita Chopra",
+    "role": "Frontend Dev",
+    "stage": "screening",
+    "score": 9.1,
+    "interviewDate": "2025-12-27",
+    "resumeUrl": "#",
+    "email": "sunita.chopra250@example.com",
+    "history": [
+      "2025-10-15: Applied for Frontend Dev",
+      "2025-11-01: Moved to Screening"
+    ]
+  }
+];
+
 // Application State
 const AppState = {
   candidates: [],
@@ -27,6 +719,9 @@ const AppState = {
   lastMove: null, // Stores { candidateId, prevStage, prevIndex, newStage } for Undo
   activeCandidateId: null
 };
+
+// Drag tracking flag to prevent click modal during or after drag
+let isDragging = false;
 
 /**
  * Wait for DOM to be fully loaded using jQuery
@@ -56,18 +751,17 @@ function initCandidateData() {
   $.ajax({
     url: `${API_BASE_URL}/candidates`,
     type: 'GET',
-    timeout: 3000,
+    timeout: 2500,
     success: function (data) {
       console.log('Connected to JSON Server successfully!', data.length, 'records found.');
       AppState.isServerOnline = true;
       AppState.candidates = data;
-      // Also cache in LocalStorage for offline resilience
       saveToLocalStorage(data);
       updateServerStatusIndicator('online', 'JSON Server Online (:3000)');
       renderAllColumns();
     },
     error: function (xhr, status, error) {
-      console.warn('JSON Server offline or unreachable. Falling back to LocalStorage & db.json:', error);
+      console.warn('JSON Server offline or unreachable. Falling back to LocalStorage & seed data:', error);
       AppState.isServerOnline = false;
       updateServerStatusIndicator('offline', 'Local Storage Mode (Offline)');
       loadFallbackData();
@@ -76,7 +770,7 @@ function initCandidateData() {
 }
 
 /**
- * Fallback to LocalStorage or fetch initial db.json if server is offline
+ * Fallback to LocalStorage or embedded seed candidates if server is offline
  */
 function loadFallbackData() {
   const cached = localStorage.getItem(STORAGE_KEY);
@@ -91,18 +785,11 @@ function loadFallbackData() {
     }
   }
 
-  // If no LocalStorage, fetch db.json directly via relative GET request
-  $.getJSON('db.json', function (data) {
-    if (data && data.candidates) {
-      AppState.candidates = data.candidates;
-      saveToLocalStorage(AppState.candidates);
-      console.log('Loaded initial seed candidates from db.json:', AppState.candidates.length);
-      renderAllColumns();
-    }
-  }).fail(function () {
-    console.error('Could not load db.json fallback.');
-    showToast('Failed to load candidate data. Please start JSON Server.', 'error');
-  });
+  // Use embedded SEED_CANDIDATES directly (zero CORS issues on file:///)
+  AppState.candidates = JSON.parse(JSON.stringify(SEED_CANDIDATES));
+  saveToLocalStorage(AppState.candidates);
+  console.log('Loaded embedded seed candidates:', AppState.candidates.length);
+  renderAllColumns();
 }
 
 function saveToLocalStorage(data) {
@@ -138,20 +825,25 @@ function updateServerStatusIndicator(state, message) {
  */
 function setupKanbanSortable() {
   /**
-   * Technical Requirement:
-   * sortable({ connectWith: '.column-cards', placeholder: '...' })
+   * Technical Requirements:
+   * - sortable({ connectWith: '.column-cards', placeholder: 'kanban-placeholder' })
+   * - Smooth drag-drop with placeholder and revert
    */
   $('.column-cards').sortable({
     connectWith: '.column-cards',
+    items: '> .kanban-card',
     placeholder: 'kanban-placeholder',
     revert: 200,
+    distance: 5, // Prevents accidental dragging on quick clicks
     cursor: 'grabbing',
-    handle: '.kanban-card',
-    opacity: 0.95,
+    cancel: 'button, select, input, a, .view-details-link',
     tolerance: 'pointer',
+    opacity: 0.92,
+    zIndex: 9999,
 
     // Fired when dragging starts
     start: function (event, ui) {
+      isDragging = true;
       const $card = ui.item;
       // Record initial stage and initial index for WIP validation & Undo
       $card.data('originStage', $card.closest('.column').data('stage'));
@@ -173,6 +865,9 @@ function setupKanbanSortable() {
     stop: function (event, ui) {
       // Remove all drop highlight classes
       $('.column-cards').removeClass('highlight-drop ui-state-hover');
+      setTimeout(function () {
+        isDragging = false;
+      }, 150);
     },
 
     // Fired when a card is dropped into a new list
@@ -216,7 +911,7 @@ function setupKanbanSortable() {
       // Perform AJAX PATCH and Trigger Visual Effects
       updateCandidateStageAjax(candidateId, newStage, $card, originStage);
     }
-  }).disableSelection();
+  });
 }
 
 /**
@@ -281,7 +976,7 @@ function updateCandidateStageAjax(candidateId, newStage, $card, originStage) {
     saveToLocalStorage(AppState.candidates);
     triggerPulseEffect($card);
     showToast(
-      `[Offline Mode] Moved <strong>${candidate.name}</strong> to <em>${stageDisplayName}</em>`,
+      `[Local Mode] Moved <strong>${candidate.name}</strong> to <em>${stageDisplayName}</em>`,
       'success',
       true
     );
@@ -293,11 +988,10 @@ function updateCandidateStageAjax(candidateId, newStage, $card, originStage) {
  * Technical Requirement: Pulse card on successful move
  */
 function triggerPulseEffect($card) {
-  // Using jQuery Chaining and CSS Animation class
-  $card.addClass('pulse-success').delay(700).queue(function (next) {
-    $(this).removeClass('pulse-success');
-    next();
-  });
+  $card.addClass('pulse-success');
+  setTimeout(function () {
+    $card.removeClass('pulse-success');
+  }, 800);
 }
 
 /**
@@ -368,8 +1062,11 @@ function createCardElement(candidate) {
   return `
     <article class="kanban-card" data-id="${candidate.id}" data-name="${escapeHtml(candidate.name)}" data-role="${escapeHtml(candidate.role)}" data-score="${candidate.score}">
       <div class="card-header">
-        <div class="candidate-avatar">${initials}</div>
-        <span class="candidate-id-badge">#${candidate.id}</span>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div class="candidate-avatar">${initials}</div>
+          <span class="candidate-id-badge">#${candidate.id}</span>
+        </div>
+        <i class="fa-solid fa-grip-vertical card-drag-grip" title="Drag card to move"></i>
       </div>
       <h3 class="candidate-name">${escapeHtml(candidate.name)}</h3>
       <span class="candidate-role">${escapeHtml(candidate.role)}</span>
@@ -401,8 +1098,7 @@ function updateColumnCounters() {
   let activeCards = 0;
 
   stages.forEach(stage => {
-    // Select column and count actual card elements inside it
-    const count = $(`.column[data-stage="${stage}"] .kanban-card`).length;
+    const count = $(`.column[data-stage="${stage}"] .kanban-card:visible`).length;
     $(`#badge-${stage}`).text(count);
 
     totalCards += count;
@@ -410,7 +1106,6 @@ function updateColumnCounters() {
       activeCards += count;
     }
 
-    // Toggle empty state placeholder if column has 0 cards
     const $cardsContainer = $(`.column[data-stage="${stage}"] .column-cards`);
     if (count === 0 && $cardsContainer.find('.empty-state').length === 0) {
       $cardsContainer.append('<div class="empty-state">No candidates in this stage</div>');
@@ -431,7 +1126,7 @@ function updateColumnCounters() {
 function setupEventListeners() {
   /**
    * Bonus Point 1: Search within board
-   * Real-time search using jQuery .filter() and :contains
+   * Real-time search using jQuery .filter()
    */
   $('#candidate-search').on('input keyup', function () {
     const query = $(this).val().trim().toLowerCase();
@@ -459,12 +1154,19 @@ function setupEventListeners() {
    * Candidate Details Modal:
    * Technical Requirement: Click card -> modal with details and history
    */
-  $(document).on('click', '.kanban-card, .btn-view-candidate', function (e) {
-    // Prevent modal opening when clicking interactive buttons or during drag
-    if ($(e.target).is('select') || $(e.target).is('input')) return;
+  $(document).on('click', '.kanban-card', function (e) {
+    // If a drag operation was performed or user clicked interactive controls, don't open modal
+    if (isDragging) return;
+    if ($(e.target).closest('button, select, input, a, .card-drag-grip').length) return;
 
-    const $card = $(this).closest('.kanban-card');
-    const candidateId = parseInt($card.attr('data-id'), 10);
+    const candidateId = parseInt($(this).attr('data-id'), 10);
+    openCandidateModal(candidateId);
+  });
+
+  // Explicit click on "View Details" button
+  $(document).on('click', '.btn-view-candidate', function (e) {
+    e.stopPropagation();
+    const candidateId = parseInt($(this).attr('data-id'), 10);
     openCandidateModal(candidateId);
   });
 
@@ -834,7 +1536,6 @@ function resetAddCandidateForm() {
   $('#add-candidate-form')[0].reset();
   $('.form-control').removeClass('is-invalid');
   $('.validation-feedback').hide();
-  // Set default date to tomorrow
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   $('#cand-date').val(tomorrow.toISOString().split('T')[0]);
