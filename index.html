@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruitment Kanban Board (Drag-Drop Pipeline) | Employee Payroll Hub</title>
+  
+  <!-- Favicon icon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- jQuery UI CSS -->
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  
+  <!-- Custom Modern Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <i class="fa-solid fa-users-gear"></i>
+        </div>
+        <div class="brand-title">
+          <h1>
+            Recruitment Kanban Board 
+            <span class="badge-tag">BHATIA-T1</span>
+          </h1>
+          <p>Drag-and-Drop Candidate Pipeline • Talent & Payroll Onboarding</p>
+        </div>
+      </div>
+
+      <!-- Search, Server Status, and Quick Action -->
+      <div class="header-actions">
+        <!-- Live Search within board -->
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input 
+            type="text" 
+            id="candidate-search" 
+            class="search-input" 
+            placeholder="Search candidate name or role..." 
+            autocomplete="off"
+          >
+        </div>
+
+        <!-- Role Filter Dropdown -->
+        <select id="role-filter" class="sort-select" style="padding: 0.55rem 0.75rem; border-radius: 9999px;">
+          <option value="all">All Roles</option>
+          <option value="Frontend Dev">Frontend Dev</option>
+          <option value="Backend Dev">Backend Dev</option>
+          <option value="Full Stack Dev">Full Stack Dev</option>
+          <option value="UI/UX Designer">UI/UX Designer</option>
+          <option value="QA Engineer">QA Engineer</option>
+          <option value="DevOps Engineer">DevOps Engineer</option>
+          <option value="Product Manager">Product Manager</option>
+          <option value="Data Analyst">Data Analyst</option>
+          <option value="Payroll Specialist">Payroll Specialist</option>
+          <option value="HR Executive">HR Executive</option>
+        </select>
+
+        <!-- Status Indicator Pill -->
+        <div id="server-status" class="status-pill" title="Server Connection Status">
+          <span class="status-dot"></span>
+          <span id="server-status-text">Checking server...</span>
+        </div>
+
+        <!-- Add Candidate Button -->
+        <button id="btn-open-add-modal" class="btn btn-primary">
+          <i class="fa-solid fa-user-plus"></i> Add Candidate
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Metric / Summary Bar -->
+  <section class="metric-bar">
+    <div class="metric-container">
+      <div class="metric-item">
+        <span>Total Candidates: <strong id="total-candidates-count">0</strong></span>
+      </div>
+      <div class="metric-item">
+        <span>Active Pipeline: <strong id="active-candidates-count">0</strong></span>
+      </div>
+      <div class="metric-item">
+        <span>Interview WIP Limit: <strong>Max 10</strong></span>
+      </div>
+      <div class="metric-item">
+        <span>Tech Stack: <strong>HTML5 • CSS3 Flexbox • jQuery 3.7 • jQuery UI Sortable • JSON Server</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Kanban Board Area -->
+  <main class="kanban-main">
+    <div class="kanban-board" id="kanban-board">
+      
+      <!-- Column 1: Applied -->
+      <section class="column" data-stage="applied">
+        <div class="column-header">
+          <div class="column-title-group">
+            <span class="column-title">
+              <i class="fa-regular fa-paper-plane" style="color: #3b82f6;"></i>
+              Applied
+            </span>
+            <span class="column-badge" id="badge-applied">0</span>
+          </div>
+          <div class="column-actions">
+            <select class="sort-select column-sort-trigger" data-stage="applied" title="Sort Column">
+              <option value="default">Sort: Default</option>
+              <option value="score-desc">Score: High &rarr; Low</option>
+              <option value="score-asc">Score: Low &rarr; High</option>
+              <option value="name-asc">Name: A &rarr; Z</option>
+            </select>
+          </div>
+        </div>
+        <div class="column-cards" data-stage="applied" id="cards-applied">
+          <!-- Candidate cards will be injected dynamically by jQuery -->
+        </div>
+      </section>
+
+      <!-- Column 2: Screening -->
+      <section class="column" data-stage="screening">
+        <div class="column-header">
+          <div class="column-title-group">
+            <span class="column-title">
+              <i class="fa-solid fa-filter" style="color: #8b5cf6;"></i>
+              Screening
+            </span>
+            <span class="column-badge" id="badge-screening">0</span>
+          </div>
+          <div class="column-actions">
+            <select class="sort-select column-sort-trigger" data-stage="screening" title="Sort Column">
+              <option value="default">Sort: Default</option>
+              <option value="score-desc">Score: High &rarr; Low</option>
+              <option value="score-asc">Score: Low &rarr; High</option>
+              <option value="name-asc">Name: A &rarr; Z</option>
+            </select>
+          </div>
+        </div>
+        <div class="column-cards" data-stage="screening" id="cards-screening">
+          <!-- Candidate cards injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Column 3: Interview (WIP Limit 10) -->
+      <section class="column" data-stage="interview">
+        <div class="column-header">
+          <div class="column-title-group">
+            <span class="column-title">
+              <i class="fa-solid fa-comments" style="color: #f59e0b;"></i>
+              Interview
+            </span>
+            <span class="column-badge" id="badge-interview">0</span>
+            <span class="wip-badge" title="Work in Progress Limit: Max 10 candidates in Interview stage">WIP 10</span>
+          </div>
+          <div class="column-actions">
+            <select class="sort-select column-sort-trigger" data-stage="interview" title="Sort Column">
+              <option value="default">Sort: Default</option>
+              <option value="score-desc">Score: High &rarr; Low</option>
+              <option value="score-asc">Score: Low &rarr; High</option>
+              <option value="name-asc">Name: A &rarr; Z</option>
+            </select>
+          </div>
+        </div>
+        <div class="column-cards" data-stage="interview" id="cards-interview">
+          <!-- Candidate cards injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Column 4: Hired / Rejected -->
+      <section class="column" data-stage="hired_rejected">
+        <div class="column-header">
+          <div class="column-title-group">
+            <span class="column-title">
+              <i class="fa-solid fa-flag-checkered" style="color: #10b981;"></i>
+              Hired / Rejected
+            </span>
+            <span class="column-badge" id="badge-hired_rejected">0</span>
+          </div>
+          <div class="column-actions">
+            <select class="sort-select column-sort-trigger" data-stage="hired_rejected" title="Sort Column">
+              <option value="default">Sort: Default</option>
+              <option value="score-desc">Score: High &rarr; Low</option>
+              <option value="score-asc">Score: Low &rarr; High</option>
+              <option value="name-asc">Name: A &rarr; Z</option>
+            </select>
+          </div>
+        </div>
+        <div class="column-cards" data-stage="hired_rejected" id="cards-hired_rejected">
+          <!-- Candidate cards injected dynamically -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Candidate Details & History Modal -->
+  <div class="modal-overlay" id="candidate-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-candidate-name">Candidate Details</h2>
+        <button class="modal-close" id="btn-close-details-modal" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="candidate-avatar" id="modal-candidate-avatar" style="width: 48px; height: 48px; font-size: 1.2rem;">PS</div>
+          <div>
+            <div id="modal-candidate-role" class="candidate-role" style="margin-bottom: 0.25rem;">Frontend Dev</div>
+            <div id="modal-candidate-id" class="candidate-id-badge">ID: #201</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; background: #f8fafc; padding: 1rem; border-radius: 8px;">
+          <div>
+            <small style="color: #64748b; display: block; font-weight: 600;">Technical Score</small>
+            <strong id="modal-candidate-score" style="font-size: 1.2rem; color: #15803d;">8.2 / 10</strong>
+          </div>
+          <div>
+            <small style="color: #64748b; display: block; font-weight: 600;">Interview Date</small>
+            <strong id="modal-candidate-date" style="font-size: 0.95rem;">2025-11-18</strong>
+          </div>
+          <div style="grid-column: span 2;">
+            <small style="color: #64748b; display: block; font-weight: 600;">Email Address</small>
+            <span id="modal-candidate-email" style="font-size: 0.9rem;">priya.sharma@example.com</span>
+          </div>
+          <div style="grid-column: span 2;">
+            <small style="color: #64748b; display: block; font-weight: 600;">Resume</small>
+            <a href="#" id="modal-candidate-resume" class="view-details-link" target="_blank">
+              <i class="fa-regular fa-file-pdf"></i> View Submitted Resume
+            </a>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="modal-stage-select">Change Pipeline Stage (Quick Action):</label>
+          <select id="modal-stage-select" class="form-control">
+            <option value="applied">Applied</option>
+            <option value="screening">Screening</option>
+            <option value="interview">Interview</option>
+            <option value="hired_rejected">Hired / Rejected</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-weight: 600; font-size: 0.825rem; color: #334155; display: block;">Pipeline Activity History:</label>
+          <ul class="history-timeline" id="modal-candidate-history">
+            <!-- Timeline items injected dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-details">Close</button>
+        <button type="button" class="btn btn-primary" id="btn-save-details-stage">Update Stage</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Candidate Modal with RegEx Validation -->
+  <div class="modal-overlay" id="add-candidate-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Candidate</h2>
+        <button class="modal-close" id="btn-close-add-modal" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="add-candidate-form" novalidate>
+        <div class="modal-body">
+          <!-- Full Name -->
+          <div class="form-group">
+            <label for="cand-name">Full Name *</label>
+            <input 
+              type="text" 
+              id="cand-name" 
+              class="form-control" 
+              placeholder="e.g. Priya Sharma" 
+              required
+            >
+            <div class="validation-feedback" id="feedback-name">
+              Name must contain 3-50 letters/spaces only (no special characters).
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="cand-email">Email Address *</label>
+            <input 
+              type="email" 
+              id="cand-email" 
+              class="form-control" 
+              placeholder="e.g. priya.sharma@example.com" 
+              required
+            >
+            <div class="validation-feedback" id="feedback-email">
+              Please enter a valid email address (e.g. name@company.com).
+            </div>
+          </div>
+
+          <!-- Target Role -->
+          <div class="form-group">
+            <label for="cand-role">Job Role *</label>
+            <select id="cand-role" class="form-control" required>
+              <option value="">-- Select Role --</option>
+              <option value="Frontend Dev">Frontend Dev</option>
+              <option value="Backend Dev">Backend Dev</option>
+              <option value="Full Stack Dev">Full Stack Dev</option>
+              <option value="UI/UX Designer">UI/UX Designer</option>
+              <option value="QA Engineer">QA Engineer</option>
+              <option value="DevOps Engineer">DevOps Engineer</option>
+              <option value="Product Manager">Product Manager</option>
+              <option value="Data Analyst">Data Analyst</option>
+              <option value="Payroll Specialist">Payroll Specialist</option>
+              <option value="HR Executive">HR Executive</option>
+            </select>
+            <div class="validation-feedback" id="feedback-role">
+              Please select a job role.
+            </div>
+          </div>
+
+          <!-- Technical Score & Interview Date -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="cand-score">Score (0.0 to 10.0) *</label>
+              <input 
+                type="number" 
+                id="cand-score" 
+                class="form-control" 
+                min="0" 
+                max="10" 
+                step="0.1" 
+                placeholder="8.5" 
+                required
+              >
+              <div class="validation-feedback" id="feedback-score">
+                Score must be a number between 0.0 and 10.0.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="cand-date">Interview Date *</label>
+              <input 
+                type="date" 
+                id="cand-date" 
+                class="form-control" 
+                required
+              >
+              <div class="validation-feedback" id="feedback-date">
+                Please pick a valid date.
+              </div>
+            </div>
+          </div>
+
+          <!-- Initial Stage -->
+          <div class="form-group">
+            <label for="cand-stage">Initial Pipeline Stage</label>
+            <select id="cand-stage" class="form-control">
+              <option value="applied" selected>Applied</option>
+              <option value="screening">Screening</option>
+              <option value="interview">Interview</option>
+              <option value="hired_rejected">Hired / Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-add">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-candidate">
+            <i class="fa-solid fa-check"></i> Save Candidate
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container with Undo Support -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- jQuery & jQuery UI Dependencies -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+  <!-- jQuery UI Touch Punch for Mobile & Tablet Touch drag-and-drop -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+  <!-- Application Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>

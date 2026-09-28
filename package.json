@@ -1,0 +1,21 @@
+{
+  "name": "recruitment-kanban-board",
+  "version": "1.0.0",
+  "description": "Recruitment Kanban Board (Drag-Drop Pipeline) with jQuery and JSON Server",
+  "main": "js/app.js",
+  "scripts": {
+    "start": "json-server --watch db.json --port 3000",
+    "server": "npx json-server --watch db.json --port 3000"
+  },
+  "keywords": [
+    "jquery",
+    "jquery-ui",
+    "kanban",
+    "drag-and-drop",
+    "json-server",
+    "ajax",
+    "flexbox"
+  ],
+  "author": "",
+  "license": "MIT"
+}
