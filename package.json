@@ -1,20 +1,20 @@
 {
-  "name": "recruitment-kanban-board",
+  "name": "performance-review-rating-module",
   "version": "1.0.0",
-  "description": "Recruitment Kanban Board (Drag-Drop Pipeline) with jQuery and JSON Server",
+  "description": "360 Performance Review and Rating Module with jQuery, Star Ratings, LocalStorage, and Grep Filtering",
   "main": "js/app.js",
   "scripts": {
-    "start": "json-server --watch db.json --port 3000",
-    "server": "npx json-server --watch db.json --port 3000"
+    "start": "json-server --watch db.json --port 3000"
   },
   "keywords": [
     "jquery",
-    "jquery-ui",
-    "kanban",
-    "drag-and-drop",
-    "json-server",
-    "ajax",
-    "flexbox"
+    "performance-review",
+    "star-rating",
+    "localstorage",
+    "grep",
+    "forms",
+    "validations",
+    "chaining"
   ],
   "author": "",
   "license": "MIT"

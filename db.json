@@ -1,692 +1,262 @@
 {
-  "candidates": [
+  "employees": [
     {
-      "id": 201,
-      "name": "Priya Sharma",
-      "role": "Frontend Dev",
-      "stage": "screening",
-      "score": 8.2,
-      "interviewDate": "2025-11-18",
-      "resumeUrl": "#",
-      "email": "priya.sharma@example.com",
-      "history": [
-        "2025-11-10: Applied for Frontend Dev",
-        "2025-11-12: Moved to Screening"
-      ]
+      "id": "101",
+      "name": "Rahul Sharma",
+      "role": "Frontend Developer",
+      "department": "Engineering",
+      "email": "rahul.sharma@example.com",
+      "prevQuarterAvg": 3.8,
+      "prevKpis": {
+        "quality": 4,
+        "punctuality": 4,
+        "teamwork": 4,
+        "problemSolving": 3,
+        "communication": 4
+      }
     },
     {
-      "id": 202,
-      "name": "Rahul Reddy",
-      "role": "QA Engineer",
-      "stage": "screening",
-      "score": 9.4,
-      "interviewDate": "2025-12-11",
-      "resumeUrl": "#",
-      "email": "rahul.reddy202@example.com",
-      "history": [
-        "2025-10-15: Applied for QA Engineer",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 203,
-      "name": "Amit Joshi",
-      "role": "Backend Dev",
-      "stage": "interview",
-      "score": 7.2,
-      "interviewDate": "2025-10-16",
-      "resumeUrl": "#",
-      "email": "amit.joshi203@example.com",
-      "history": [
-        "2025-10-15: Applied for Backend Dev",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 204,
-      "name": "Sneha Bhatia",
-      "role": "Payroll Specialist",
-      "stage": "hired_rejected",
-      "score": 8.9,
-      "interviewDate": "2025-11-21",
-      "resumeUrl": "#",
-      "email": "sneha.bhatia204@example.com",
-      "history": [
-        "2025-10-15: Applied for Payroll Specialist",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 205,
-      "name": "Vikram Das",
-      "role": "DevOps Engineer",
-      "stage": "applied",
-      "score": 6.7,
-      "interviewDate": "2025-12-26",
-      "resumeUrl": "#",
-      "email": "vikram.das205@example.com",
-      "history": [
-        "2025-10-15: Applied for DevOps Engineer"
-      ]
-    },
-    {
-      "id": 206,
-      "name": "Ananya Rao",
-      "role": "Full Stack Dev",
-      "stage": "screening",
-      "score": 8.4,
-      "interviewDate": "2025-10-03",
-      "resumeUrl": "#",
-      "email": "ananya.rao206@example.com",
-      "history": [
-        "2025-10-15: Applied for Full Stack Dev",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 207,
-      "name": "Rohan Verma",
-      "role": "HR Executive",
-      "stage": "interview",
-      "score": 6.2,
-      "interviewDate": "2025-11-08",
-      "resumeUrl": "#",
-      "email": "rohan.verma207@example.com",
-      "history": [
-        "2025-10-15: Applied for HR Executive",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 208,
-      "name": "Kavita Gupta",
-      "role": "Product Manager",
-      "stage": "hired_rejected",
-      "score": 7.9,
-      "interviewDate": "2025-12-13",
-      "resumeUrl": "#",
-      "email": "kavita.gupta208@example.com",
-      "history": [
-        "2025-10-15: Applied for Product Manager",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 209,
-      "name": "Suresh Mehta",
+      "id": "102",
+      "name": "Priya Patel",
       "role": "UI/UX Designer",
-      "stage": "applied",
-      "score": 9.6,
-      "interviewDate": "2025-10-18",
-      "resumeUrl": "#",
-      "email": "suresh.mehta209@example.com",
-      "history": [
-        "2025-10-15: Applied for UI/UX Designer"
-      ]
+      "department": "Design",
+      "email": "priya.patel@example.com",
+      "prevQuarterAvg": 4.2,
+      "prevKpis": {
+        "quality": 5,
+        "punctuality": 4,
+        "teamwork": 4,
+        "problemSolving": 4,
+        "communication": 4
+      }
     },
     {
-      "id": 210,
-      "name": "Neha Chopra",
-      "role": "Frontend Dev",
-      "stage": "screening",
-      "score": 7.4,
-      "interviewDate": "2025-11-23",
-      "resumeUrl": "#",
-      "email": "neha.chopra210@example.com",
-      "history": [
-        "2025-10-15: Applied for Frontend Dev",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 211,
-      "name": "Arjun Saxena",
-      "role": "Data Analyst",
-      "stage": "interview",
-      "score": 9.1,
-      "interviewDate": "2025-12-28",
-      "resumeUrl": "#",
-      "email": "arjun.saxena211@example.com",
-      "history": [
-        "2025-10-15: Applied for Data Analyst",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 212,
-      "name": "Pooja Iyer",
+      "id": "103",
+      "name": "Amit Verma",
       "role": "QA Engineer",
-      "stage": "hired_rejected",
-      "score": 6.9,
-      "interviewDate": "2025-10-05",
-      "resumeUrl": "#",
-      "email": "pooja.iyer212@example.com",
-      "history": [
-        "2025-10-15: Applied for QA Engineer",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
+      "department": "Quality Assurance",
+      "email": "amit.verma@example.com",
+      "prevQuarterAvg": 2.6,
+      "prevKpis": {
+        "quality": 3,
+        "punctuality": 2,
+        "teamwork": 3,
+        "problemSolving": 2,
+        "communication": 3
+      }
     },
     {
-      "id": 213,
-      "name": "Manish Yadav",
-      "role": "Backend Dev",
-      "stage": "applied",
-      "score": 8.6,
-      "interviewDate": "2025-11-10",
-      "resumeUrl": "#",
-      "email": "manish.yadav213@example.com",
-      "history": [
-        "2025-10-15: Applied for Backend Dev"
-      ]
+      "id": "104",
+      "name": "Sneha Reddy",
+      "role": "Backend Developer",
+      "department": "Engineering",
+      "email": "sneha.reddy@example.com",
+      "prevQuarterAvg": 3.5,
+      "prevKpis": {
+        "quality": 4,
+        "punctuality": 3,
+        "teamwork": 4,
+        "problemSolving": 3,
+        "communication": 3
+      }
     },
     {
-      "id": 214,
-      "name": "Deepika Patel",
-      "role": "Payroll Specialist",
-      "stage": "screening",
-      "score": 6.4,
-      "interviewDate": "2025-12-15",
-      "resumeUrl": "#",
-      "email": "deepika.patel214@example.com",
-      "history": [
-        "2025-10-15: Applied for Payroll Specialist",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 215,
-      "name": "Aditya Kumar",
+      "id": "105",
+      "name": "Vikram Singh",
       "role": "DevOps Engineer",
-      "stage": "interview",
-      "score": 8.1,
-      "interviewDate": "2025-10-20",
-      "resumeUrl": "#",
-      "email": "aditya.kumar215@example.com",
-      "history": [
-        "2025-10-15: Applied for DevOps Engineer",
-        "2025-11-01: Moved to Interview"
-      ]
+      "department": "Operations",
+      "email": "vikram.singh@example.com",
+      "prevQuarterAvg": 2.4,
+      "prevKpis": {
+        "quality": 2,
+        "punctuality": 3,
+        "teamwork": 2,
+        "problemSolving": 3,
+        "communication": 2
+      }
     },
     {
-      "id": 216,
-      "name": "Ritu Nair",
-      "role": "Full Stack Dev",
-      "stage": "hired_rejected",
-      "score": 9.8,
-      "interviewDate": "2025-11-25",
-      "resumeUrl": "#",
-      "email": "ritu.nair216@example.com",
-      "history": [
-        "2025-10-15: Applied for Full Stack Dev",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
+      "id": "106",
+      "name": "Ananya Joshi",
+      "role": "Product Manager",
+      "department": "Product",
+      "email": "ananya.joshi@example.com",
+      "prevQuarterAvg": 4.5,
+      "prevKpis": {
+        "quality": 5,
+        "punctuality": 4,
+        "teamwork": 5,
+        "problemSolving": 4,
+        "communication": 5
+      }
     },
     {
-      "id": 217,
+      "id": "107",
       "name": "Karan Malhotra",
-      "role": "HR Executive",
-      "stage": "applied",
-      "score": 7.6,
-      "interviewDate": "2025-12-02",
-      "resumeUrl": "#",
-      "email": "karan.malhotra217@example.com",
-      "history": [
-        "2025-10-15: Applied for HR Executive"
-      ]
+      "role": "Full Stack Dev",
+      "department": "Engineering",
+      "email": "karan.malhotra@example.com",
+      "prevQuarterAvg": 3.2,
+      "prevKpis": {
+        "quality": 3,
+        "punctuality": 3,
+        "teamwork": 4,
+        "problemSolving": 3,
+        "communication": 3
+      }
     },
     {
-      "id": 218,
-      "name": "Meera Deshmukh",
-      "role": "Product Manager",
-      "stage": "screening",
-      "score": 9.3,
-      "interviewDate": "2025-10-07",
-      "resumeUrl": "#",
-      "email": "meera.deshmukh218@example.com",
-      "history": [
-        "2025-10-15: Applied for Product Manager",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 219,
-      "name": "Nikhil Menon",
-      "role": "UI/UX Designer",
-      "stage": "interview",
-      "score": 7.1,
-      "interviewDate": "2025-11-12",
-      "resumeUrl": "#",
-      "email": "nikhil.menon219@example.com",
-      "history": [
-        "2025-10-15: Applied for UI/UX Designer",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 220,
-      "name": "Divya Sharma",
-      "role": "Frontend Dev",
-      "stage": "hired_rejected",
-      "score": 8.8,
-      "interviewDate": "2025-12-17",
-      "resumeUrl": "#",
-      "email": "divya.sharma220@example.com",
-      "history": [
-        "2025-10-15: Applied for Frontend Dev",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 221,
-      "name": "Siddharth Singh",
-      "role": "Data Analyst",
-      "stage": "applied",
-      "score": 6.6,
-      "interviewDate": "2025-10-22",
-      "resumeUrl": "#",
-      "email": "siddharth.singh221@example.com",
-      "history": [
-        "2025-10-15: Applied for Data Analyst"
-      ]
-    },
-    {
-      "id": 222,
-      "name": "Tanvi Reddy",
-      "role": "QA Engineer",
-      "stage": "screening",
-      "score": 8.3,
-      "interviewDate": "2025-11-27",
-      "resumeUrl": "#",
-      "email": "tanvi.reddy222@example.com",
-      "history": [
-        "2025-10-15: Applied for QA Engineer",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 223,
-      "name": "Varun Joshi",
-      "role": "Backend Dev",
-      "stage": "interview",
-      "score": 6.1,
-      "interviewDate": "2025-12-04",
-      "resumeUrl": "#",
-      "email": "varun.joshi223@example.com",
-      "history": [
-        "2025-10-15: Applied for Backend Dev",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 224,
+      "id": "108",
       "name": "Isha Bhatia",
       "role": "Payroll Specialist",
-      "stage": "hired_rejected",
-      "score": 7.8,
-      "interviewDate": "2025-10-09",
-      "resumeUrl": "#",
-      "email": "isha.bhatia224@example.com",
-      "history": [
-        "2025-10-15: Applied for Payroll Specialist",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 225,
-      "name": "Abhishek Das",
-      "role": "DevOps Engineer",
-      "stage": "applied",
-      "score": 9.5,
-      "interviewDate": "2025-11-14",
-      "resumeUrl": "#",
-      "email": "abhishek.das225@example.com",
-      "history": [
-        "2025-10-15: Applied for DevOps Engineer"
-      ]
-    },
-    {
-      "id": 226,
-      "name": "Swati Rao",
-      "role": "Full Stack Dev",
-      "stage": "screening",
-      "score": 7.3,
-      "interviewDate": "2025-12-19",
-      "resumeUrl": "#",
-      "email": "swati.rao226@example.com",
-      "history": [
-        "2025-10-15: Applied for Full Stack Dev",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 227,
-      "name": "Gaurav Verma",
-      "role": "HR Executive",
-      "stage": "interview",
-      "score": 9,
-      "interviewDate": "2025-10-24",
-      "resumeUrl": "#",
-      "email": "gaurav.verma227@example.com",
-      "history": [
-        "2025-10-15: Applied for HR Executive",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 228,
-      "name": "Shweta Gupta",
-      "role": "Product Manager",
-      "stage": "hired_rejected",
-      "score": 6.8,
-      "interviewDate": "2025-11-01",
-      "resumeUrl": "#",
-      "email": "shweta.gupta228@example.com",
-      "history": [
-        "2025-10-15: Applied for Product Manager",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 229,
-      "name": "Rajesh Mehta",
-      "role": "UI/UX Designer",
-      "stage": "applied",
-      "score": 8.5,
-      "interviewDate": "2025-12-06",
-      "resumeUrl": "#",
-      "email": "rajesh.mehta229@example.com",
-      "history": [
-        "2025-10-15: Applied for UI/UX Designer"
-      ]
-    },
-    {
-      "id": 230,
-      "name": "Preeti Chopra",
-      "role": "Frontend Dev",
-      "stage": "screening",
-      "score": 6.3,
-      "interviewDate": "2025-10-11",
-      "resumeUrl": "#",
-      "email": "preeti.chopra230@example.com",
-      "history": [
-        "2025-10-15: Applied for Frontend Dev",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 231,
-      "name": "Harsh Saxena",
-      "role": "Data Analyst",
-      "stage": "interview",
-      "score": 8,
-      "interviewDate": "2025-11-16",
-      "resumeUrl": "#",
-      "email": "harsh.saxena231@example.com",
-      "history": [
-        "2025-10-15: Applied for Data Analyst",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 232,
-      "name": "Simran Iyer",
-      "role": "QA Engineer",
-      "stage": "hired_rejected",
-      "score": 9.7,
-      "interviewDate": "2025-12-21",
-      "resumeUrl": "#",
-      "email": "simran.iyer232@example.com",
-      "history": [
-        "2025-10-15: Applied for QA Engineer",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 233,
-      "name": "Akash Yadav",
-      "role": "Backend Dev",
-      "stage": "applied",
-      "score": 7.5,
-      "interviewDate": "2025-10-26",
-      "resumeUrl": "#",
-      "email": "akash.yadav233@example.com",
-      "history": [
-        "2025-10-15: Applied for Backend Dev"
-      ]
-    },
-    {
-      "id": 234,
-      "name": "Shruti Patel",
-      "role": "Payroll Specialist",
-      "stage": "screening",
-      "score": 9.2,
-      "interviewDate": "2025-11-03",
-      "resumeUrl": "#",
-      "email": "shruti.patel234@example.com",
-      "history": [
-        "2025-10-15: Applied for Payroll Specialist",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 235,
-      "name": "Kartik Kumar",
-      "role": "DevOps Engineer",
-      "stage": "interview",
-      "score": 7,
-      "interviewDate": "2025-12-08",
-      "resumeUrl": "#",
-      "email": "kartik.kumar235@example.com",
-      "history": [
-        "2025-10-15: Applied for DevOps Engineer",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 236,
-      "name": "Bhavna Nair",
-      "role": "Full Stack Dev",
-      "stage": "hired_rejected",
-      "score": 8.7,
-      "interviewDate": "2025-10-13",
-      "resumeUrl": "#",
-      "email": "bhavna.nair236@example.com",
-      "history": [
-        "2025-10-15: Applied for Full Stack Dev",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 237,
-      "name": "Mayank Malhotra",
-      "role": "HR Executive",
-      "stage": "applied",
-      "score": 6.5,
-      "interviewDate": "2025-11-18",
-      "resumeUrl": "#",
-      "email": "mayank.malhotra237@example.com",
-      "history": [
-        "2025-10-15: Applied for HR Executive"
-      ]
-    },
-    {
-      "id": 238,
-      "name": "Pallavi Deshmukh",
-      "role": "Product Manager",
-      "stage": "screening",
-      "score": 8.2,
-      "interviewDate": "2025-12-23",
-      "resumeUrl": "#",
-      "email": "pallavi.deshmukh238@example.com",
-      "history": [
-        "2025-10-15: Applied for Product Manager",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 239,
-      "name": "Sachin Menon",
-      "role": "UI/UX Designer",
-      "stage": "interview",
-      "score": 9.9,
-      "interviewDate": "2025-10-28",
-      "resumeUrl": "#",
-      "email": "sachin.menon239@example.com",
-      "history": [
-        "2025-10-15: Applied for UI/UX Designer",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 240,
-      "name": "Komal Sharma",
-      "role": "Frontend Dev",
-      "stage": "hired_rejected",
-      "score": 7.7,
-      "interviewDate": "2025-11-05",
-      "resumeUrl": "#",
-      "email": "komal.sharma240@example.com",
-      "history": [
-        "2025-10-15: Applied for Frontend Dev",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 241,
-      "name": "Prateek Singh",
-      "role": "Data Analyst",
-      "stage": "applied",
-      "score": 9.4,
-      "interviewDate": "2025-12-10",
-      "resumeUrl": "#",
-      "email": "prateek.singh241@example.com",
-      "history": [
-        "2025-10-15: Applied for Data Analyst"
-      ]
-    },
-    {
-      "id": 242,
-      "name": "Monika Reddy",
-      "role": "QA Engineer",
-      "stage": "screening",
-      "score": 7.2,
-      "interviewDate": "2025-10-15",
-      "resumeUrl": "#",
-      "email": "monika.reddy242@example.com",
-      "history": [
-        "2025-10-15: Applied for QA Engineer",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 243,
-      "name": "Vishal Joshi",
-      "role": "Backend Dev",
-      "stage": "interview",
-      "score": 8.9,
-      "interviewDate": "2025-11-20",
-      "resumeUrl": "#",
-      "email": "vishal.joshi243@example.com",
-      "history": [
-        "2025-10-15: Applied for Backend Dev",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 244,
-      "name": "Aarti Bhatia",
-      "role": "Payroll Specialist",
-      "stage": "hired_rejected",
-      "score": 6.7,
-      "interviewDate": "2025-12-25",
-      "resumeUrl": "#",
-      "email": "aarti.bhatia244@example.com",
-      "history": [
-        "2025-10-15: Applied for Payroll Specialist",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 245,
-      "name": "Kunal Das",
-      "role": "DevOps Engineer",
-      "stage": "applied",
-      "score": 8.4,
-      "interviewDate": "2025-10-02",
-      "resumeUrl": "#",
-      "email": "kunal.das245@example.com",
-      "history": [
-        "2025-10-15: Applied for DevOps Engineer"
-      ]
-    },
-    {
-      "id": 246,
-      "name": "Rashmi Rao",
-      "role": "Full Stack Dev",
-      "stage": "screening",
-      "score": 6.2,
-      "interviewDate": "2025-11-07",
-      "resumeUrl": "#",
-      "email": "rashmi.rao246@example.com",
-      "history": [
-        "2025-10-15: Applied for Full Stack Dev",
-        "2025-11-01: Moved to Screening"
-      ]
-    },
-    {
-      "id": 247,
-      "name": "Tarun Verma",
-      "role": "HR Executive",
-      "stage": "interview",
-      "score": 7.9,
-      "interviewDate": "2025-12-12",
-      "resumeUrl": "#",
-      "email": "tarun.verma247@example.com",
-      "history": [
-        "2025-10-15: Applied for HR Executive",
-        "2025-11-01: Moved to Interview"
-      ]
-    },
-    {
-      "id": 248,
-      "name": "Payal Gupta",
-      "role": "Product Manager",
-      "stage": "hired_rejected",
-      "score": 9.6,
-      "interviewDate": "2025-10-17",
-      "resumeUrl": "#",
-      "email": "payal.gupta248@example.com",
-      "history": [
-        "2025-10-15: Applied for Product Manager",
-        "2025-11-01: Moved to Hired/rejected"
-      ]
-    },
-    {
-      "id": 249,
-      "name": "Alok Mehta",
-      "role": "UI/UX Designer",
-      "stage": "applied",
-      "score": 7.4,
-      "interviewDate": "2025-11-22",
-      "resumeUrl": "#",
-      "email": "alok.mehta249@example.com",
-      "history": [
-        "2025-10-15: Applied for UI/UX Designer"
-      ]
-    },
-    {
-      "id": 250,
-      "name": "Sunita Chopra",
-      "role": "Frontend Dev",
-      "stage": "screening",
-      "score": 9.1,
-      "interviewDate": "2025-12-27",
-      "resumeUrl": "#",
-      "email": "sunita.chopra250@example.com",
-      "history": [
-        "2025-10-15: Applied for Frontend Dev",
-        "2025-11-01: Moved to Screening"
-      ]
+      "department": "Human Resources",
+      "email": "isha.bhatia@example.com",
+      "prevQuarterAvg": 2.2,
+      "prevKpis": {
+        "quality": 2,
+        "punctuality": 2,
+        "teamwork": 3,
+        "problemSolving": 2,
+        "communication": 2
+      }
     }
-  ]
+  ],
+  "reviews": [
+    {
+      "id": "REV-101-Q4",
+      "employeeId": 101,
+      "employeeName": "Rahul Sharma",
+      "role": "Frontend Developer",
+      "department": "Engineering",
+      "quarter": "Q4-2026",
+      "kpis": {
+        "quality": 4,
+        "punctuality": 3,
+        "teamwork": 5,
+        "problemSolving": 4,
+        "communication": 4
+      },
+      "weights": {
+        "quality": 0.25,
+        "punctuality": 0.2,
+        "teamwork": 0.2,
+        "problemSolving": 0.2,
+        "communication": 0.15
+      },
+      "avg": 4,
+      "reviewer": "manager_01",
+      "comment": "Consistently delivered robust and responsive frontend components during the recent major payroll release.",
+      "status": "submitted",
+      "date": "2026-09-15"
+    },
+    {
+      "id": "REV-102-Q4",
+      "employeeId": 102,
+      "employeeName": "Priya Patel",
+      "role": "UI/UX Designer",
+      "department": "Design",
+      "quarter": "Q4-2026",
+      "kpis": {
+        "quality": 5,
+        "punctuality": 4,
+        "teamwork": 4,
+        "problemSolving": 5,
+        "communication": 4
+      },
+      "weights": {
+        "quality": 0.25,
+        "punctuality": 0.2,
+        "teamwork": 0.2,
+        "problemSolving": 0.2,
+        "communication": 0.15
+      },
+      "avg": 4.45,
+      "reviewer": "manager_01",
+      "comment": "Outstanding design prototypes and accessibility enhancements across all mobile touchpoints.",
+      "status": "submitted",
+      "date": "2026-09-18"
+    },
+    {
+      "id": "REV-103-Q4",
+      "employeeId": 103,
+      "employeeName": "Amit Verma",
+      "role": "QA Engineer",
+      "department": "Quality Assurance",
+      "quarter": "Q4-2026",
+      "kpis": {
+        "quality": 2,
+        "punctuality": 2,
+        "teamwork": 3,
+        "problemSolving": 2,
+        "communication": 2
+      },
+      "weights": {
+        "quality": 0.25,
+        "punctuality": 0.2,
+        "teamwork": 0.2,
+        "problemSolving": 0.2,
+        "communication": 0.15
+      },
+      "avg": 2.2,
+      "reviewer": "manager_01",
+      "comment": "Repeated regressions identified in build cycles; needs urgent structured training on automation frameworks.",
+      "status": "submitted",
+      "date": "2026-09-20"
+    },
+    {
+      "id": "REV-105-Q4",
+      "employeeId": 105,
+      "employeeName": "Vikram Singh",
+      "role": "DevOps Engineer",
+      "department": "Operations",
+      "quarter": "Q4-2026",
+      "kpis": {
+        "quality": 2,
+        "punctuality": 3,
+        "teamwork": 2,
+        "problemSolving": 3,
+        "communication": 2
+      },
+      "weights": {
+        "quality": 0.25,
+        "punctuality": 0.2,
+        "teamwork": 0.2,
+        "problemSolving": 0.2,
+        "communication": 0.15
+      },
+      "avg": 2.4,
+      "reviewer": "manager_02",
+      "comment": "Server maintenance bottlenecks delayed production releases; requires immediate performance coaching.",
+      "status": "submitted",
+      "date": "2026-09-22"
+    },
+    {
+      "id": "REV-108-Q4",
+      "employeeId": 108,
+      "employeeName": "Isha Bhatia",
+      "role": "Payroll Specialist",
+      "department": "Human Resources",
+      "quarter": "Q4-2026",
+      "kpis": {
+        "quality": 2,
+        "punctuality": 2,
+        "teamwork": 2,
+        "problemSolving": 2,
+        "communication": 2
+      },
+      "weights": {
+        "quality": 0.25,
+        "punctuality": 0.2,
+        "teamwork": 0.2,
+        "problemSolving": 0.2,
+        "communication": 0.15
+      },
+      "avg": 2,
+      "reviewer": "manager_03",
+      "comment": "Critical compliance report discrepancies observed this quarter requiring targeted intervention and review.",
+      "status": "submitted",
+      "date": "2026-09-24"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }

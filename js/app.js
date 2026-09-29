@@ -1,1610 +1,986 @@
-/**
- * ============================================================================
- * Recruitment Kanban Board (Drag-Drop Pipeline) [BHATIA-T1]
- * ============================================================================
- * Concepts Covered:
- * - jQuery Selectors: $('.kanban-card[data-id]'), $('.column[data-stage="..."]')
- * - DOM Traversing: $(this).closest('.column').data('stage'), .find(), .parent()
- * - jQuery UI Sortable: connectWith, placeholder, revert, distance, start/receive/stop
- * - jQuery Effects: highlight drop zone, pulse card on drop, fade/slide animations
- * - AJAX Calls: PATCH /candidates/:id, GET, POST with JSON Server
- * - LocalStorage sync fallback for offline/direct file execution
- * - Data Management: $.grep, $.map, Array.prototype.sort, duplicate checking
- * - RegEx Form Validations
- * - Interactive Features: Real-time search, Column counters, WIP limit, Undo move
- * ============================================================================
- */
-
-// Configuration Constants
-const API_BASE_URL = 'http://localhost:3000';
-const STORAGE_KEY = 'payroll_recruitment_candidates_v1';
-const WIP_LIMIT_INTERVIEW = 10;
-
-// Embedded Seed Data (Ensures 100% reliable load even if file:/// CORS blocks db.json)
-const SEED_CANDIDATES = [
-  {
-    "id": 201,
-    "name": "Priya Sharma",
-    "role": "Frontend Dev",
-    "stage": "screening",
-    "score": 8.2,
-    "interviewDate": "2025-11-18",
-    "resumeUrl": "#",
-    "email": "priya.sharma@example.com",
-    "history": [
-      "2025-11-10: Applied for Frontend Dev",
-      "2025-11-12: Moved to Screening"
-    ]
-  },
-  {
-    "id": 202,
-    "name": "Rahul Reddy",
-    "role": "QA Engineer",
-    "stage": "screening",
-    "score": 9.4,
-    "interviewDate": "2025-12-11",
-    "resumeUrl": "#",
-    "email": "rahul.reddy202@example.com",
-    "history": [
-      "2025-10-15: Applied for QA Engineer",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 203,
-    "name": "Amit Joshi",
-    "role": "Backend Dev",
-    "stage": "interview",
-    "score": 7.2,
-    "interviewDate": "2025-10-16",
-    "resumeUrl": "#",
-    "email": "amit.joshi203@example.com",
-    "history": [
-      "2025-10-15: Applied for Backend Dev",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 204,
-    "name": "Sneha Bhatia",
-    "role": "Payroll Specialist",
-    "stage": "hired_rejected",
-    "score": 8.9,
-    "interviewDate": "2025-11-21",
-    "resumeUrl": "#",
-    "email": "sneha.bhatia204@example.com",
-    "history": [
-      "2025-10-15: Applied for Payroll Specialist",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 205,
-    "name": "Vikram Das",
-    "role": "DevOps Engineer",
-    "stage": "applied",
-    "score": 6.7,
-    "interviewDate": "2025-12-26",
-    "resumeUrl": "#",
-    "email": "vikram.das205@example.com",
-    "history": [
-      "2025-10-15: Applied for DevOps Engineer"
-    ]
-  },
-  {
-    "id": 206,
-    "name": "Ananya Rao",
-    "role": "Full Stack Dev",
-    "stage": "screening",
-    "score": 8.4,
-    "interviewDate": "2025-10-03",
-    "resumeUrl": "#",
-    "email": "ananya.rao206@example.com",
-    "history": [
-      "2025-10-15: Applied for Full Stack Dev",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 207,
-    "name": "Rohan Verma",
-    "role": "HR Executive",
-    "stage": "interview",
-    "score": 6.2,
-    "interviewDate": "2025-11-08",
-    "resumeUrl": "#",
-    "email": "rohan.verma207@example.com",
-    "history": [
-      "2025-10-15: Applied for HR Executive",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 208,
-    "name": "Kavita Gupta",
-    "role": "Product Manager",
-    "stage": "hired_rejected",
-    "score": 7.9,
-    "interviewDate": "2025-12-13",
-    "resumeUrl": "#",
-    "email": "kavita.gupta208@example.com",
-    "history": [
-      "2025-10-15: Applied for Product Manager",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 209,
-    "name": "Suresh Mehta",
-    "role": "UI/UX Designer",
-    "stage": "applied",
-    "score": 9.6,
-    "interviewDate": "2025-10-18",
-    "resumeUrl": "#",
-    "email": "suresh.mehta209@example.com",
-    "history": [
-      "2025-10-15: Applied for UI/UX Designer"
-    ]
-  },
-  {
-    "id": 210,
-    "name": "Neha Chopra",
-    "role": "Frontend Dev",
-    "stage": "screening",
-    "score": 7.4,
-    "interviewDate": "2025-11-23",
-    "resumeUrl": "#",
-    "email": "neha.chopra210@example.com",
-    "history": [
-      "2025-10-15: Applied for Frontend Dev",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 211,
-    "name": "Arjun Saxena",
-    "role": "Data Analyst",
-    "stage": "interview",
-    "score": 9.1,
-    "interviewDate": "2025-12-28",
-    "resumeUrl": "#",
-    "email": "arjun.saxena211@example.com",
-    "history": [
-      "2025-10-15: Applied for Data Analyst",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 212,
-    "name": "Pooja Iyer",
-    "role": "QA Engineer",
-    "stage": "hired_rejected",
-    "score": 6.9,
-    "interviewDate": "2025-10-05",
-    "resumeUrl": "#",
-    "email": "pooja.iyer212@example.com",
-    "history": [
-      "2025-10-15: Applied for QA Engineer",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 213,
-    "name": "Manish Yadav",
-    "role": "Backend Dev",
-    "stage": "applied",
-    "score": 8.6,
-    "interviewDate": "2025-11-10",
-    "resumeUrl": "#",
-    "email": "manish.yadav213@example.com",
-    "history": [
-      "2025-10-15: Applied for Backend Dev"
-    ]
-  },
-  {
-    "id": 214,
-    "name": "Deepika Patel",
-    "role": "Payroll Specialist",
-    "stage": "screening",
-    "score": 6.4,
-    "interviewDate": "2025-12-15",
-    "resumeUrl": "#",
-    "email": "deepika.patel214@example.com",
-    "history": [
-      "2025-10-15: Applied for Payroll Specialist",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 215,
-    "name": "Aditya Kumar",
-    "role": "DevOps Engineer",
-    "stage": "interview",
-    "score": 8.1,
-    "interviewDate": "2025-10-20",
-    "resumeUrl": "#",
-    "email": "aditya.kumar215@example.com",
-    "history": [
-      "2025-10-15: Applied for DevOps Engineer",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 216,
-    "name": "Ritu Nair",
-    "role": "Full Stack Dev",
-    "stage": "hired_rejected",
-    "score": 9.8,
-    "interviewDate": "2025-11-25",
-    "resumeUrl": "#",
-    "email": "ritu.nair216@example.com",
-    "history": [
-      "2025-10-15: Applied for Full Stack Dev",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 217,
-    "name": "Karan Malhotra",
-    "role": "HR Executive",
-    "stage": "applied",
-    "score": 7.6,
-    "interviewDate": "2025-12-02",
-    "resumeUrl": "#",
-    "email": "karan.malhotra217@example.com",
-    "history": [
-      "2025-10-15: Applied for HR Executive"
-    ]
-  },
-  {
-    "id": 218,
-    "name": "Meera Deshmukh",
-    "role": "Product Manager",
-    "stage": "screening",
-    "score": 9.3,
-    "interviewDate": "2025-10-07",
-    "resumeUrl": "#",
-    "email": "meera.deshmukh218@example.com",
-    "history": [
-      "2025-10-15: Applied for Product Manager",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 219,
-    "name": "Nikhil Menon",
-    "role": "UI/UX Designer",
-    "stage": "interview",
-    "score": 7.1,
-    "interviewDate": "2025-11-12",
-    "resumeUrl": "#",
-    "email": "nikhil.menon219@example.com",
-    "history": [
-      "2025-10-15: Applied for UI/UX Designer",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 220,
-    "name": "Divya Sharma",
-    "role": "Frontend Dev",
-    "stage": "hired_rejected",
-    "score": 8.8,
-    "interviewDate": "2025-12-17",
-    "resumeUrl": "#",
-    "email": "divya.sharma220@example.com",
-    "history": [
-      "2025-10-15: Applied for Frontend Dev",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 221,
-    "name": "Siddharth Singh",
-    "role": "Data Analyst",
-    "stage": "applied",
-    "score": 6.6,
-    "interviewDate": "2025-10-22",
-    "resumeUrl": "#",
-    "email": "siddharth.singh221@example.com",
-    "history": [
-      "2025-10-15: Applied for Data Analyst"
-    ]
-  },
-  {
-    "id": 222,
-    "name": "Tanvi Reddy",
-    "role": "QA Engineer",
-    "stage": "screening",
-    "score": 8.3,
-    "interviewDate": "2025-11-27",
-    "resumeUrl": "#",
-    "email": "tanvi.reddy222@example.com",
-    "history": [
-      "2025-10-15: Applied for QA Engineer",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 223,
-    "name": "Varun Joshi",
-    "role": "Backend Dev",
-    "stage": "interview",
-    "score": 6.1,
-    "interviewDate": "2025-12-04",
-    "resumeUrl": "#",
-    "email": "varun.joshi223@example.com",
-    "history": [
-      "2025-10-15: Applied for Backend Dev",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 224,
-    "name": "Isha Bhatia",
-    "role": "Payroll Specialist",
-    "stage": "hired_rejected",
-    "score": 7.8,
-    "interviewDate": "2025-10-09",
-    "resumeUrl": "#",
-    "email": "isha.bhatia224@example.com",
-    "history": [
-      "2025-10-15: Applied for Payroll Specialist",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 225,
-    "name": "Abhishek Das",
-    "role": "DevOps Engineer",
-    "stage": "applied",
-    "score": 9.5,
-    "interviewDate": "2025-11-14",
-    "resumeUrl": "#",
-    "email": "abhishek.das225@example.com",
-    "history": [
-      "2025-10-15: Applied for DevOps Engineer"
-    ]
-  },
-  {
-    "id": 226,
-    "name": "Swati Rao",
-    "role": "Full Stack Dev",
-    "stage": "screening",
-    "score": 7.3,
-    "interviewDate": "2025-12-19",
-    "resumeUrl": "#",
-    "email": "swati.rao226@example.com",
-    "history": [
-      "2025-10-15: Applied for Full Stack Dev",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 227,
-    "name": "Gaurav Verma",
-    "role": "HR Executive",
-    "stage": "interview",
-    "score": 9,
-    "interviewDate": "2025-10-24",
-    "resumeUrl": "#",
-    "email": "gaurav.verma227@example.com",
-    "history": [
-      "2025-10-15: Applied for HR Executive",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 228,
-    "name": "Shweta Gupta",
-    "role": "Product Manager",
-    "stage": "hired_rejected",
-    "score": 6.8,
-    "interviewDate": "2025-11-01",
-    "resumeUrl": "#",
-    "email": "shweta.gupta228@example.com",
-    "history": [
-      "2025-10-15: Applied for Product Manager",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 229,
-    "name": "Rajesh Mehta",
-    "role": "UI/UX Designer",
-    "stage": "applied",
-    "score": 8.5,
-    "interviewDate": "2025-12-06",
-    "resumeUrl": "#",
-    "email": "rajesh.mehta229@example.com",
-    "history": [
-      "2025-10-15: Applied for UI/UX Designer"
-    ]
-  },
-  {
-    "id": 230,
-    "name": "Preeti Chopra",
-    "role": "Frontend Dev",
-    "stage": "screening",
-    "score": 6.3,
-    "interviewDate": "2025-10-11",
-    "resumeUrl": "#",
-    "email": "preeti.chopra230@example.com",
-    "history": [
-      "2025-10-15: Applied for Frontend Dev",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 231,
-    "name": "Harsh Saxena",
-    "role": "Data Analyst",
-    "stage": "interview",
-    "score": 8,
-    "interviewDate": "2025-11-16",
-    "resumeUrl": "#",
-    "email": "harsh.saxena231@example.com",
-    "history": [
-      "2025-10-15: Applied for Data Analyst",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 232,
-    "name": "Simran Iyer",
-    "role": "QA Engineer",
-    "stage": "hired_rejected",
-    "score": 9.7,
-    "interviewDate": "2025-12-21",
-    "resumeUrl": "#",
-    "email": "simran.iyer232@example.com",
-    "history": [
-      "2025-10-15: Applied for QA Engineer",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 233,
-    "name": "Akash Yadav",
-    "role": "Backend Dev",
-    "stage": "applied",
-    "score": 7.5,
-    "interviewDate": "2025-10-26",
-    "resumeUrl": "#",
-    "email": "akash.yadav233@example.com",
-    "history": [
-      "2025-10-15: Applied for Backend Dev"
-    ]
-  },
-  {
-    "id": 234,
-    "name": "Shruti Patel",
-    "role": "Payroll Specialist",
-    "stage": "screening",
-    "score": 9.2,
-    "interviewDate": "2025-11-03",
-    "resumeUrl": "#",
-    "email": "shruti.patel234@example.com",
-    "history": [
-      "2025-10-15: Applied for Payroll Specialist",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 235,
-    "name": "Kartik Kumar",
-    "role": "DevOps Engineer",
-    "stage": "interview",
-    "score": 7,
-    "interviewDate": "2025-12-08",
-    "resumeUrl": "#",
-    "email": "kartik.kumar235@example.com",
-    "history": [
-      "2025-10-15: Applied for DevOps Engineer",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 236,
-    "name": "Bhavna Nair",
-    "role": "Full Stack Dev",
-    "stage": "hired_rejected",
-    "score": 8.7,
-    "interviewDate": "2025-10-13",
-    "resumeUrl": "#",
-    "email": "bhavna.nair236@example.com",
-    "history": [
-      "2025-10-15: Applied for Full Stack Dev",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 237,
-    "name": "Mayank Malhotra",
-    "role": "HR Executive",
-    "stage": "applied",
-    "score": 6.5,
-    "interviewDate": "2025-11-18",
-    "resumeUrl": "#",
-    "email": "mayank.malhotra237@example.com",
-    "history": [
-      "2025-10-15: Applied for HR Executive"
-    ]
-  },
-  {
-    "id": 238,
-    "name": "Pallavi Deshmukh",
-    "role": "Product Manager",
-    "stage": "screening",
-    "score": 8.2,
-    "interviewDate": "2025-12-23",
-    "resumeUrl": "#",
-    "email": "pallavi.deshmukh238@example.com",
-    "history": [
-      "2025-10-15: Applied for Product Manager",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 239,
-    "name": "Sachin Menon",
-    "role": "UI/UX Designer",
-    "stage": "interview",
-    "score": 9.9,
-    "interviewDate": "2025-10-28",
-    "resumeUrl": "#",
-    "email": "sachin.menon239@example.com",
-    "history": [
-      "2025-10-15: Applied for UI/UX Designer",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 240,
-    "name": "Komal Sharma",
-    "role": "Frontend Dev",
-    "stage": "hired_rejected",
-    "score": 7.7,
-    "interviewDate": "2025-11-05",
-    "resumeUrl": "#",
-    "email": "komal.sharma240@example.com",
-    "history": [
-      "2025-10-15: Applied for Frontend Dev",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 241,
-    "name": "Prateek Singh",
-    "role": "Data Analyst",
-    "stage": "applied",
-    "score": 9.4,
-    "interviewDate": "2025-12-10",
-    "resumeUrl": "#",
-    "email": "prateek.singh241@example.com",
-    "history": [
-      "2025-10-15: Applied for Data Analyst"
-    ]
-  },
-  {
-    "id": 242,
-    "name": "Monika Reddy",
-    "role": "QA Engineer",
-    "stage": "screening",
-    "score": 7.2,
-    "interviewDate": "2025-10-15",
-    "resumeUrl": "#",
-    "email": "monika.reddy242@example.com",
-    "history": [
-      "2025-10-15: Applied for QA Engineer",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 243,
-    "name": "Vishal Joshi",
-    "role": "Backend Dev",
-    "stage": "interview",
-    "score": 8.9,
-    "interviewDate": "2025-11-20",
-    "resumeUrl": "#",
-    "email": "vishal.joshi243@example.com",
-    "history": [
-      "2025-10-15: Applied for Backend Dev",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 244,
-    "name": "Aarti Bhatia",
-    "role": "Payroll Specialist",
-    "stage": "hired_rejected",
-    "score": 6.7,
-    "interviewDate": "2025-12-25",
-    "resumeUrl": "#",
-    "email": "aarti.bhatia244@example.com",
-    "history": [
-      "2025-10-15: Applied for Payroll Specialist",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 245,
-    "name": "Kunal Das",
-    "role": "DevOps Engineer",
-    "stage": "applied",
-    "score": 8.4,
-    "interviewDate": "2025-10-02",
-    "resumeUrl": "#",
-    "email": "kunal.das245@example.com",
-    "history": [
-      "2025-10-15: Applied for DevOps Engineer"
-    ]
-  },
-  {
-    "id": 246,
-    "name": "Rashmi Rao",
-    "role": "Full Stack Dev",
-    "stage": "screening",
-    "score": 6.2,
-    "interviewDate": "2025-11-07",
-    "resumeUrl": "#",
-    "email": "rashmi.rao246@example.com",
-    "history": [
-      "2025-10-15: Applied for Full Stack Dev",
-      "2025-11-01: Moved to Screening"
-    ]
-  },
-  {
-    "id": 247,
-    "name": "Tarun Verma",
-    "role": "HR Executive",
-    "stage": "interview",
-    "score": 7.9,
-    "interviewDate": "2025-12-12",
-    "resumeUrl": "#",
-    "email": "tarun.verma247@example.com",
-    "history": [
-      "2025-10-15: Applied for HR Executive",
-      "2025-11-01: Moved to Interview"
-    ]
-  },
-  {
-    "id": 248,
-    "name": "Payal Gupta",
-    "role": "Product Manager",
-    "stage": "hired_rejected",
-    "score": 9.6,
-    "interviewDate": "2025-10-17",
-    "resumeUrl": "#",
-    "email": "payal.gupta248@example.com",
-    "history": [
-      "2025-10-15: Applied for Product Manager",
-      "2025-11-01: Moved to Hired/rejected"
-    ]
-  },
-  {
-    "id": 249,
-    "name": "Alok Mehta",
-    "role": "UI/UX Designer",
-    "stage": "applied",
-    "score": 7.4,
-    "interviewDate": "2025-11-22",
-    "resumeUrl": "#",
-    "email": "alok.mehta249@example.com",
-    "history": [
-      "2025-10-15: Applied for UI/UX Designer"
-    ]
-  },
-  {
-    "id": 250,
-    "name": "Sunita Chopra",
-    "role": "Frontend Dev",
-    "stage": "screening",
-    "score": 9.1,
-    "interviewDate": "2025-12-27",
-    "resumeUrl": "#",
-    "email": "sunita.chopra250@example.com",
-    "history": [
-      "2025-10-15: Applied for Frontend Dev",
-      "2025-11-01: Moved to Screening"
-    ]
-  }
-];
-
-// Application State
-const AppState = {
-  candidates: [],
-  isServerOnline: false,
-  lastMove: null, // Stores { candidateId, prevStage, prevIndex, newStage } for Undo
-  activeCandidateId: null
+const KPI_CONFIG = {
+  quality: { name: 'Work Quality', weight: 0.25 },
+  punctuality: { name: 'Punctuality & Delivery', weight: 0.20 },
+  teamwork: { name: 'Teamwork & Culture', weight: 0.20 },
+  problemSolving: { name: 'Problem Solving', weight: 0.20 },
+  communication: { name: 'Communication', weight: 0.15 }
 };
 
-// Drag tracking flag to prevent click modal during or after drag
-let isDragging = false;
+const RATING_DESCRIPTIONS = {
+  1: '1 - Unsatisfactory',
+  2: '2 - Needs Improvement',
+  3: '3 - Meets Expectations',
+  4: '4 - Exceeds Expectations',
+  5: '5 - Outstanding'
+};
 
-/**
- * Wait for DOM to be fully loaded using jQuery
- */
-$(document).ready(function () {
-  console.log('Document ready - Initializing Recruitment Kanban Board...');
+const DRAFT_STORAGE_KEY = 'bhatia_t2_review_draft';
+const API_BASE = 'http://localhost:3000';
 
-  // 1. Check server connection and load candidates
-  initCandidateData();
+let employeeList = [];
+let reviewList = [];
+let radarChartInstance = null;
 
-  // 2. Setup jQuery UI Sortable on all columns
-  setupKanbanSortable();
+$(document).ready(function() {
+  initRadarChart();
+  setupNavigationTabs();
+  setupStarRatings();
+  setupCommentValidation();
+  setupFormButtons();
+  setupRestoreBanner();
+  setupModal();
+  setupSearchAndFilters();
 
-  // 3. Setup Event Listeners (Search, Modals, Forms, Column Sorts)
-  setupEventListeners();
+  loadInitialData();
+  startAutoSaveTimer();
 });
 
-/**
- * ----------------------------------------------------------------------------
- * 1. Data Initialization & Server Sync (AJAX & LocalStorage)
- * ----------------------------------------------------------------------------
- */
-function initCandidateData() {
-  updateServerStatusIndicator('checking', 'Connecting to JSON Server...');
+function initRadarChart() {
+  const canvas = document.getElementById('kpiRadarChart');
+  if (!canvas) return;
 
-  // Test JSON Server availability via AJAX GET
-  $.ajax({
-    url: `${API_BASE_URL}/candidates`,
-    type: 'GET',
-    timeout: 2500,
-    success: function (data) {
-      console.log('Connected to JSON Server successfully!', data.length, 'records found.');
-      AppState.isServerOnline = true;
-      AppState.candidates = data;
-      saveToLocalStorage(data);
-      updateServerStatusIndicator('online', 'JSON Server Online (:3000)');
-      renderAllColumns();
+  const ctx = canvas.getContext('2d');
+  radarChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Quality', 'Punctuality', 'Teamwork', 'Problem Solving', 'Communication'],
+      datasets: [
+        {
+          label: 'Current Review',
+          data: [0, 0, 0, 0, 0],
+          backgroundColor: 'rgba(79, 70, 229, 0.25)',
+          borderColor: '#4f46e5',
+          pointBackgroundColor: '#4f46e5',
+          borderWidth: 2
+        },
+        {
+          label: 'Previous Quarter',
+          data: [0, 0, 0, 0, 0],
+          backgroundColor: 'rgba(148, 163, 184, 0.15)',
+          borderColor: '#94a3b8',
+          borderWidth: 2,
+          borderDash: [4, 4],
+          pointBackgroundColor: '#94a3b8'
+        }
+      ]
     },
-    error: function (xhr, status, error) {
-      console.warn('JSON Server offline or unreachable. Falling back to LocalStorage & seed data:', error);
-      AppState.isServerOnline = false;
-      updateServerStatusIndicator('offline', 'Local Storage Mode (Offline)');
-      loadFallbackData();
-    }
-  });
-}
-
-/**
- * Fallback to LocalStorage or embedded seed candidates if server is offline
- */
-function loadFallbackData() {
-  const cached = localStorage.getItem(STORAGE_KEY);
-  if (cached) {
-    try {
-      AppState.candidates = JSON.parse(cached);
-      console.log('Loaded candidates from LocalStorage:', AppState.candidates.length);
-      renderAllColumns();
-      return;
-    } catch (e) {
-      console.error('Error parsing LocalStorage data:', e);
-    }
-  }
-
-  // Use embedded SEED_CANDIDATES directly (zero CORS issues on file:///)
-  AppState.candidates = JSON.parse(JSON.stringify(SEED_CANDIDATES));
-  saveToLocalStorage(AppState.candidates);
-  console.log('Loaded embedded seed candidates:', AppState.candidates.length);
-  renderAllColumns();
-}
-
-function saveToLocalStorage(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.warn('Failed to save candidates to localStorage', e);
-  }
-}
-
-function updateServerStatusIndicator(state, message) {
-  const $pill = $('#server-status');
-  const $text = $('#server-status-text');
-  $text.text(message);
-
-  const $dot = $pill.find('.status-dot');
-  if (state === 'online') {
-    $dot.css('background', '#10b981');
-    $pill.css({ background: '#ecfdf5', color: '#047857' });
-  } else if (state === 'offline') {
-    $dot.css('background', '#f59e0b');
-    $pill.css({ background: '#fffbeb', color: '#b45309' });
-  } else {
-    $dot.css('background', '#64748b');
-    $pill.css({ background: '#f1f5f9', color: '#475569' });
-  }
-}
-
-/**
- * ----------------------------------------------------------------------------
- * 2. jQuery UI Sortable Setup (Drag & Drop Pipeline)
- * ----------------------------------------------------------------------------
- */
-function setupKanbanSortable() {
-  /**
-   * Technical Requirements:
-   * - sortable({ connectWith: '.column-cards', placeholder: 'kanban-placeholder' })
-   * - Smooth drag-drop with placeholder and revert
-   */
-  $('.column-cards').sortable({
-    connectWith: '.column-cards',
-    items: '> .kanban-card',
-    placeholder: 'kanban-placeholder',
-    revert: 200,
-    distance: 5, // Prevents accidental dragging on quick clicks
-    cursor: 'grabbing',
-    cancel: 'button, select, input, a, .view-details-link',
-    tolerance: 'pointer',
-    opacity: 0.92,
-    zIndex: 9999,
-
-    // Fired when dragging starts
-    start: function (event, ui) {
-      isDragging = true;
-      const $card = ui.item;
-      // Record initial stage and initial index for WIP validation & Undo
-      $card.data('originStage', $card.closest('.column').data('stage'));
-      $card.data('originIndex', $card.index());
-
-      // Effects: highlight other column drop zones
-      $('.column-cards').not($card.parent()).addClass('highlight-drop');
-    },
-
-    // Fired while hovering over a target column
-    over: function (event, ui) {
-      $(this).addClass('ui-state-hover');
-    },
-    out: function (event, ui) {
-      $(this).removeClass('ui-state-hover');
-    },
-
-    // Fired when dragging stops
-    stop: function (event, ui) {
-      // Remove all drop highlight classes
-      $('.column-cards').removeClass('highlight-drop ui-state-hover');
-      setTimeout(function () {
-        isDragging = false;
-      }, 150);
-    },
-
-    // Fired when a card is dropped into a new list
-    receive: function (event, ui) {
-      const $card = ui.item;
-      const candidateId = parseInt($card.attr('data-id'), 10);
-      const originStage = $card.data('originStage');
-      
-      /**
-       * Technical Requirement:
-       * DOM Traversing: On drop, use $(this).closest('.column').data('stage') to get new stage
-       */
-      const newStage = $(this).closest('.column').data('stage');
-
-      console.log(`[DragDrop] Card ID #${candidateId} moved: ${originStage} -> ${newStage}`);
-
-      // Bonus Point: WIP Limit Warning (max 10 candidates in Interview stage)
-      if (newStage === 'interview') {
-        const currentCountInInterview = $('.column[data-stage="interview"] .kanban-card').length;
-        if (currentCountInInterview > WIP_LIMIT_INTERVIEW) {
-          // Revert drag back to original column
-          $(ui.sender).sortable('cancel');
-          showToast(`⚠️ WIP Limit Exceeded! Max ${WIP_LIMIT_INTERVIEW} candidates allowed in Interview stage.`, 'warning');
-          return;
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          min: 0,
+          max: 5,
+          ticks: {
+            stepSize: 1,
+            display: false
+          },
+          pointLabels: {
+            font: {
+              size: 11,
+              weight: 'bold'
+            }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: 12,
+            font: { size: 11 }
+          }
         }
       }
-
-      // If dropped in same stage, no need to PATCH
-      if (originStage === newStage) {
-        return;
-      }
-
-      // Record move for Undo capability
-      AppState.lastMove = {
-        candidateId: candidateId,
-        prevStage: originStage,
-        prevIndex: $card.data('originIndex'),
-        newStage: newStage
-      };
-
-      // Perform AJAX PATCH and Trigger Visual Effects
-      updateCandidateStageAjax(candidateId, newStage, $card, originStage);
     }
   });
 }
 
-/**
- * ----------------------------------------------------------------------------
- * 3. AJAX Update (PATCH /candidates/:id) with Pulse Effect & Toasts
- * ----------------------------------------------------------------------------
- */
-function updateCandidateStageAjax(candidateId, newStage, $card, originStage) {
-  // Find candidate in memory
-  const candidate = AppState.candidates.find(c => c.id === candidateId);
-  if (!candidate) return;
+function setupNavigationTabs() {
+  $('.tab-btn').on('click', function() {
+    const targetTab = $(this).data('tab');
+    $('.tab-btn').removeClass('active');
+    $(this).addClass('active');
 
-  // Add history entry
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  const stageDisplayName = formatStageName(newStage);
-  const historyEntry = `${dateStr}: Moved to ${stageDisplayName}`;
-  
-  if (!candidate.history) candidate.history = [];
-  candidate.history.push(historyEntry);
-  candidate.stage = newStage;
+    $('.tab-pane').removeClass('active').hide();
+    $('#' + targetTab).fadeIn(200).addClass('active');
 
-  // Update Counters immediately for responsive UI feel
-  updateColumnCounters();
+    if (targetTab === 'tab-at-risk') {
+      renderAtRiskList();
+    } else if (targetTab === 'tab-reviews') {
+      renderReviewsTable(reviewList);
+    }
+  });
+}
 
-  if (AppState.isServerOnline) {
-    /**
-     * Technical Requirement:
-     * Ajax: PATCH /candidates/:id with new stage
-     */
-    $.ajax({
-      url: `${API_BASE_URL}/candidates/${candidateId}`,
-      type: 'PATCH',
-      contentType: 'application/json',
-      data: JSON.stringify({
-        stage: newStage,
-        history: candidate.history
-      }),
-      success: function (response) {
-        console.log(`AJAX PATCH Success for #${candidateId}:`, response);
-        saveToLocalStorage(AppState.candidates);
-
-        // Technical Requirement: Pulse card on successful move
-        triggerPulseEffect($card);
-
-        // Technical Requirement: Toast notification with Undo action
-        showToast(
-          `Moved <strong>${candidate.name}</strong> to <em>${stageDisplayName}</em>`,
-          'success',
-          true
-        );
-      },
-      error: function (xhr, status, error) {
-        console.error('AJAX PATCH failed:', error);
-        // Error handling: Revert UI card back to origin column
-        revertCardToOrigin($card, originStage);
-        showToast(`Failed to update candidate status: ${error}`, 'error');
+function setupStarRatings() {
+  $('.star').on('mouseenter', function() {
+    const currentVal = parseInt($(this).data('val'), 10);
+    const container = $(this).closest('.star-rating');
+    container.find('.star').each(function() {
+      const starVal = parseInt($(this).data('val'), 10);
+      if (starVal <= currentVal) {
+        $(this).addClass('hovered');
+      } else {
+        $(this).removeClass('hovered');
       }
     });
-  } else {
-    // Offline / LocalStorage Mode Fallback
-    saveToLocalStorage(AppState.candidates);
-    triggerPulseEffect($card);
-    showToast(
-      `[Local Mode] Moved <strong>${candidate.name}</strong> to <em>${stageDisplayName}</em>`,
-      'success',
-      true
-    );
-  }
-}
+  });
 
-/**
- * Pulse Effect on successful card move
- * Technical Requirement: Pulse card on successful move
- */
-function triggerPulseEffect($card) {
-  $card.addClass('pulse-success');
-  setTimeout(function () {
-    $card.removeClass('pulse-success');
-  }, 800);
-}
+  $('.star-rating').on('mouseleave', function() {
+    $(this).find('.star').removeClass('hovered');
+  });
 
-/**
- * Revert card to original column on Ajax failure
- */
-function revertCardToOrigin($card, originStage) {
-  const $targetCardsContainer = $(`.column[data-stage="${originStage}"] .column-cards`);
-  $card.detach().appendTo($targetCardsContainer);
-  updateColumnCounters();
-}
+  $('.star').on('click', function() {
+    const val = parseInt($(this).data('val'), 10);
+    const container = $(this).closest('.star-rating');
+    const kpiKey = container.data('kpi');
+    const kpiRow = container.closest('.kpi-row');
 
-/**
- * ----------------------------------------------------------------------------
- * 4. Rendering & DOM Generation
- * ----------------------------------------------------------------------------
- */
-function renderAllColumns() {
-  const stages = ['applied', 'screening', 'interview', 'hired_rejected'];
-
-  stages.forEach(stage => {
-    /**
-     * Technical Requirement:
-     * Selectors: $('.column[data-stage="screening"]')
-     */
-    const $columnContainer = $(`.column[data-stage="${stage}"] .column-cards`);
-    $columnContainer.empty();
-
-    /**
-     * Use jQuery grep to filter candidates for each stage
-     */
-    const stageCandidates = $.grep(AppState.candidates, function (c) {
-      return c.stage === stage;
+    container.find('.star').each(function() {
+      const starVal = parseInt($(this).data('val'), 10);
+      if (starVal <= val) {
+        $(this).addClass('selected');
+      } else {
+        $(this).removeClass('selected');
+      }
     });
 
-    if (stageCandidates.length === 0) {
-      $columnContainer.append('<div class="empty-state">No candidates in this stage</div>');
+    $('#kpi-' + kpiKey).val(val);
+    kpiRow.removeClass('unrated-error');
+
+    const badge = $('#badge-' + kpiKey);
+    badge.text(RATING_DESCRIPTIONS[val]);
+    badge.removeClass('rated-good rated-warning rated-danger');
+    if (val >= 4) {
+      badge.addClass('rated-good');
+    } else if (val === 3) {
+      badge.addClass('rated-warning');
     } else {
-      stageCandidates.forEach(candidate => {
-        const cardHtml = createCardElement(candidate);
-        $columnContainer.append(cardHtml);
-      });
-    }
-  });
-
-  // Refresh counters and stats
-  updateColumnCounters();
-}
-
-/**
- * Generates HTML for a Candidate Card
- */
-function createCardElement(candidate) {
-  const initials = candidate.name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-
-  let scoreClass = 'score-med';
-  if (candidate.score >= 8.0) scoreClass = 'score-high';
-  else if (candidate.score < 6.0) scoreClass = 'score-low';
-
-  /**
-   * Technical Requirement:
-   * Selectors: $('.kanban-card[data-id]')
-   */
-  return `
-    <article class="kanban-card" data-id="${candidate.id}" data-name="${escapeHtml(candidate.name)}" data-role="${escapeHtml(candidate.role)}" data-score="${candidate.score}">
-      <div class="card-header">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <div class="candidate-avatar">${initials}</div>
-          <span class="candidate-id-badge">#${candidate.id}</span>
-        </div>
-        <i class="fa-solid fa-grip-vertical card-drag-grip" title="Drag card to move"></i>
-      </div>
-      <h3 class="candidate-name">${escapeHtml(candidate.name)}</h3>
-      <span class="candidate-role">${escapeHtml(candidate.role)}</span>
-      
-      <div class="card-meta">
-        <span class="score-badge ${scoreClass}" title="Technical Assessment Score">
-          <i class="fa-solid fa-star"></i> ${candidate.score.toFixed(1)}
-        </span>
-        <span class="interview-date" title="Interview Scheduled Date">
-          <i class="fa-regular fa-calendar"></i> ${candidate.interviewDate || 'TBD'}
-        </span>
-      </div>
-
-      <div class="card-footer">
-        <span class="view-details-link btn-view-candidate" data-id="${candidate.id}">
-          <i class="fa-solid fa-circle-info"></i> View Details
-        </span>
-      </div>
-    </article>
-  `;
-}
-
-/**
- * Update Column Counters and Metric Bar
- */
-function updateColumnCounters() {
-  const stages = ['applied', 'screening', 'interview', 'hired_rejected'];
-  let totalCards = 0;
-  let activeCards = 0;
-
-  stages.forEach(stage => {
-    const count = $(`.column[data-stage="${stage}"] .kanban-card:visible`).length;
-    $(`#badge-${stage}`).text(count);
-
-    totalCards += count;
-    if (stage !== 'hired_rejected') {
-      activeCards += count;
+      badge.addClass('rated-danger');
     }
 
-    const $cardsContainer = $(`.column[data-stage="${stage}"] .column-cards`);
-    if (count === 0 && $cardsContainer.find('.empty-state').length === 0) {
-      $cardsContainer.append('<div class="empty-state">No candidates in this stage</div>');
-    } else if (count > 0) {
-      $cardsContainer.find('.empty-state').remove();
-    }
-  });
-
-  $('#total-candidates-count').text(totalCards);
-  $('#active-candidates-count').text(activeCards);
-}
-
-/**
- * ----------------------------------------------------------------------------
- * 5. Event Listeners & UI Interactions
- * ----------------------------------------------------------------------------
- */
-function setupEventListeners() {
-  /**
-   * Bonus Point 1: Search within board
-   * Real-time search using jQuery .filter()
-   */
-  $('#candidate-search').on('input keyup', function () {
-    const query = $(this).val().trim().toLowerCase();
-    const selectedRole = $('#role-filter').val();
-    filterCandidates(query, selectedRole);
-  });
-
-  // Role Filter Dropdown change
-  $('#role-filter').on('change', function () {
-    const selectedRole = $(this).val();
-    const query = $('#candidate-search').val().trim().toLowerCase();
-    filterCandidates(query, selectedRole);
-  });
-
-  /**
-   * Sort Dropdown inside each column header
-   */
-  $('.column-sort-trigger').on('change', function () {
-    const stage = $(this).data('stage');
-    const sortType = $(this).val();
-    sortColumnCards(stage, sortType);
-  });
-
-  /**
-   * Candidate Details Modal:
-   * Technical Requirement: Click card -> modal with details and history
-   */
-  $(document).on('click', '.kanban-card', function (e) {
-    // If a drag operation was performed or user clicked interactive controls, don't open modal
-    if (isDragging) return;
-    if ($(e.target).closest('button, select, input, a, .card-drag-grip').length) return;
-
-    const candidateId = parseInt($(this).attr('data-id'), 10);
-    openCandidateModal(candidateId);
-  });
-
-  // Explicit click on "View Details" button
-  $(document).on('click', '.btn-view-candidate', function (e) {
-    e.stopPropagation();
-    const candidateId = parseInt($(this).attr('data-id'), 10);
-    openCandidateModal(candidateId);
-  });
-
-  // Close modals
-  $('#btn-close-details-modal, #btn-cancel-details').on('click', function () {
-    $('#candidate-modal').fadeOut(200);
-  });
-
-  $('#btn-close-add-modal, #btn-cancel-add').on('click', function () {
-    $('#add-candidate-modal').fadeOut(200);
-  });
-
-  // Close modal when clicking on backdrop
-  $('.modal-overlay').on('click', function (e) {
-    if ($(e.target).hasClass('modal-overlay')) {
-      $(this).fadeOut(200);
-    }
-  });
-
-  // Open "Add Candidate" Modal
-  $('#btn-open-add-modal').on('click', function () {
-    resetAddCandidateForm();
-    $('#add-candidate-modal').css('display', 'flex').hide().fadeIn(250);
-  });
-
-  // Submit "Add Candidate" Form with RegEx Validations
-  $('#add-candidate-form').on('submit', function (e) {
-    e.preventDefault();
-    handleAddCandidateSubmit();
-  });
-
-  // Save stage change from inside Candidate Details Modal
-  $('#btn-save-details-stage').on('click', function () {
-    handleDetailsStageUpdate();
-  });
-
-  // Bonus Point: Undo Move click event
-  $(document).on('click', '#btn-undo-move', function () {
-    handleUndoLastMove();
+    calculateWeightedScore();
+    updateRadarChartData();
+    checkCommentRequirementRule();
   });
 }
 
-/**
- * Filter candidates by search query and role
- */
-function filterCandidates(query, role) {
-  $('.kanban-card').each(function () {
-    const $card = $(this);
-    const name = ($card.data('name') || '').toLowerCase();
-    const cardRole = $card.data('role') || '';
+function calculateWeightedScore() {
+  let totalScore = 0;
+  let totalWeight = 0;
+  let allRated = true;
 
-    const matchesQuery = query === '' || name.includes(query) || cardRole.toLowerCase().includes(query);
-    const matchesRole = role === 'all' || cardRole === role;
-
-    if (matchesQuery && matchesRole) {
-      $card.show();
+  for (const key in KPI_CONFIG) {
+    const rawVal = $('#kpi-' + key).val();
+    if (rawVal) {
+      const val = parseFloat(rawVal);
+      const weight = KPI_CONFIG[key].weight;
+      totalScore += val * weight;
+      totalWeight += weight;
     } else {
-      $card.hide();
+      allRated = false;
     }
-  });
-
-  updateColumnCounters();
-}
-
-/**
- * Sort cards inside a specific column
- */
-function sortColumnCards(stage, sortType) {
-  const $columnCards = $(`.column[data-stage="${stage}"] .column-cards`);
-  const $cards = $columnCards.find('.kanban-card').get();
-
-  if ($cards.length <= 1 || sortType === 'default') return;
-
-  $cards.sort(function (a, b) {
-    const scoreA = parseFloat($(a).data('score')) || 0;
-    const scoreB = parseFloat($(b).data('score')) || 0;
-    const nameA = ($(a).data('name') || '').toLowerCase();
-    const nameB = ($(b).data('name') || '').toLowerCase();
-
-    if (sortType === 'score-desc') return scoreB - scoreA;
-    if (sortType === 'score-asc') return scoreA - scoreB;
-    if (sortType === 'name-asc') return nameA.localeCompare(nameB);
-    return 0;
-  });
-
-  // Re-append sorted elements using jQuery
-  $.each($cards, function (index, card) {
-    $columnCards.append(card);
-  });
-}
-
-/**
- * ----------------------------------------------------------------------------
- * 6. Candidate Details Modal Handling
- * ----------------------------------------------------------------------------
- */
-function openCandidateModal(candidateId) {
-  const candidate = AppState.candidates.find(c => c.id === candidateId);
-  if (!candidate) return;
-
-  AppState.activeCandidateId = candidateId;
-
-  // Populate modal data
-  $('#modal-candidate-name').text(candidate.name);
-  $('#modal-candidate-avatar').text(candidate.name.substring(0, 2).toUpperCase());
-  $('#modal-candidate-role').text(candidate.role);
-  $('#modal-candidate-id').text(`ID: #${candidate.id}`);
-  $('#modal-candidate-score').text(`${candidate.score.toFixed(1)} / 10`);
-  $('#modal-candidate-date').text(candidate.interviewDate || 'Not scheduled');
-  $('#modal-candidate-email').text(candidate.email || 'N/A');
-  $('#modal-stage-select').val(candidate.stage);
-
-  // Render History Timeline
-  const $historyContainer = $('#modal-candidate-history');
-  $historyContainer.empty();
-
-  if (candidate.history && candidate.history.length > 0) {
-    candidate.history.forEach(item => {
-      $historyContainer.append(`<li class="history-item">${escapeHtml(item)}</li>`);
-    });
-  } else {
-    $historyContainer.append('<li class="history-item">Candidate record created</li>');
   }
 
-  // Show modal with jQuery fadeIn
-  $('#candidate-modal').css('display', 'flex').hide().fadeIn(250);
+  const scoreText = totalWeight > 0 ? (totalScore / totalWeight).toFixed(2) : '0.00';
+  $('#live-weighted-score').text(scoreText);
+  $('#comp-curr-val').text(scoreText);
+
+  updateScoreAppearance(parseFloat(scoreText), allRated);
+  updateComparisonDelta(parseFloat(scoreText));
 }
 
-function handleDetailsStageUpdate() {
-  const candidateId = AppState.activeCandidateId;
-  const newStage = $('#modal-stage-select').val();
-  const candidate = AppState.candidates.find(c => c.id === candidateId);
-  if (!candidate) return;
+function updateScoreAppearance(score, allRated) {
+  const circle = $('#score-circle-element');
+  const pill = $('#score-tier-pill');
 
-  if (candidate.stage === newStage) {
-    $('#candidate-modal').fadeOut(200);
+  circle.removeClass('tier-excellent tier-good tier-average tier-at-risk');
+  pill.removeClass('tier-excellent tier-good tier-average tier-at-risk');
+
+  if (!allRated && score === 0) {
+    pill.text('Not Rated Yet');
     return;
   }
 
-  // Check WIP limit if moving to interview
-  if (newStage === 'interview') {
-    const currentCount = $('.column[data-stage="interview"] .kanban-card').length;
-    if (currentCount >= WIP_LIMIT_INTERVIEW) {
-      showToast(`⚠️ WIP Limit: Max ${WIP_LIMIT_INTERVIEW} candidates allowed in Interview stage.`, 'warning');
+  if (score >= 4.2) {
+    circle.addClass('tier-excellent');
+    pill.addClass('tier-excellent').text('Exceeds Expectations');
+  } else if (score >= 3.5) {
+    circle.addClass('tier-good');
+    pill.addClass('tier-good').text('Meets Standards');
+  } else if (score >= 3.0) {
+    circle.addClass('tier-average');
+    pill.addClass('tier-average').text('Average / Satisfactory');
+  } else {
+    circle.addClass('tier-at-risk');
+    pill.addClass('tier-at-risk').text('At-Risk / Action Required');
+  }
+}
+
+function updateComparisonDelta(currentScore) {
+  const prevValStr = $('#prev-score-val').text();
+  const prevVal = parseFloat(prevValStr);
+  const deltaBadge = $('#comp-delta-badge');
+
+  if (isNaN(prevVal) || currentScore === 0) {
+    deltaBadge.text('0.00').removeClass('positive negative');
+    return;
+  }
+
+  const diff = currentScore - prevVal;
+  const formattedDiff = (diff >= 0 ? '+' : '') + diff.toFixed(2);
+  deltaBadge.text(formattedDiff);
+
+  deltaBadge.removeClass('positive negative');
+  if (diff >= 0) {
+    deltaBadge.addClass('positive');
+  } else {
+    deltaBadge.addClass('negative');
+  }
+}
+
+function updateRadarChartData() {
+  if (!radarChartInstance) return;
+
+  const currentValues = [
+    parseFloat($('#kpi-quality').val()) || 0,
+    parseFloat($('#kpi-punctuality').val()) || 0,
+    parseFloat($('#kpi-teamwork').val()) || 0,
+    parseFloat($('#kpi-problemSolving').val()) || 0,
+    parseFloat($('#kpi-communication').val()) || 0
+  ];
+
+  radarChartInstance.data.datasets[0].data = currentValues;
+  radarChartInstance.update();
+}
+
+function hasLowRating() {
+  let lowFound = false;
+  for (const key in KPI_CONFIG) {
+    const val = parseInt($('#kpi-' + key).val(), 10);
+    if (val && val < 3) {
+      lowFound = true;
+      break;
+    }
+  }
+
+  const currentAvg = parseFloat($('#live-weighted-score').text());
+  if (currentAvg > 0 && currentAvg < 3.0) {
+    lowFound = true;
+  }
+
+  return lowFound;
+}
+
+function checkCommentRequirementRule() {
+  const isStrict = hasLowRating();
+  const ruleBadge = $('#comment-rule-indicator');
+  const instruction = $('#comment-instruction-text');
+
+  if (isStrict) {
+    ruleBadge.removeClass('rule-normal').addClass('rule-strict').text('Detailed Feedback Required');
+    instruction.addClass('urgent-requirement').text('Notice: One or more ratings are below 3 stars. You must provide at least 20 characters of detailed managerial feedback.');
+  } else {
+    ruleBadge.removeClass('rule-strict').addClass('rule-normal').text('Standard Feedback');
+    instruction.removeClass('urgent-requirement').text('General review feedback. If any rating is below 3 stars, a detailed comment (min 20 characters) is required.');
+  }
+
+  validateCommentLength();
+}
+
+function setupCommentValidation() {
+  $('#review-comment').on('input', function() {
+    validateCommentLength();
+  });
+}
+
+function validateCommentLength() {
+  const comment = $('#review-comment').val().trim();
+  const count = comment.length;
+  const counter = $('#char-counter');
+  const errorElem = $('#error-comment');
+  const isStrict = hasLowRating();
+
+  if (isStrict) {
+    counter.text(count + ' / 20 characters minimum');
+    if (count >= 20) {
+      counter.removeClass('invalid-count').addClass('valid-count');
+      errorElem.text('');
+      $('#review-comment').removeClass('is-invalid');
+    } else {
+      counter.removeClass('valid-count').addClass('invalid-count');
+      if (count > 0) {
+        errorElem.text((20 - count) + ' more characters required');
+      }
+    }
+  } else {
+    counter.text(count + ' characters').removeClass('invalid-count valid-count');
+    errorElem.text('');
+    $('#review-comment').removeClass('is-invalid');
+  }
+}
+
+function setupFormButtons() {
+  $('#employee-select').on('change', function() {
+    const empId = parseInt($(this).val(), 10);
+    $('#error-employee').text('');
+    $(this).removeClass('is-invalid');
+
+    if (!empId) {
+      $('#employee-info-card').slideUp(200);
+      $('#prev-score-val').text('--');
+      $('#prev-score-desc').text('Select an employee');
+      $('#comp-prev-val').text('--');
+      if (radarChartInstance) {
+        radarChartInstance.data.datasets[1].data = [0, 0, 0, 0, 0];
+        radarChartInstance.update();
+      }
       return;
     }
-  }
 
-  const $card = $(`.kanban-card[data-id="${candidateId}"]`);
-  const originStage = candidate.stage;
+    const employee = employeeList.find(e => e.id === empId);
+    if (!employee) return;
 
-  // Move card DOM element to target column
-  $(`.column[data-stage="${newStage}"] .column-cards`).prepend($card);
+    $('#emp-avatar').text(employee.name.split(' ').map(n => n[0]).join('').substring(0, 2));
+    $('#emp-meta-name').text(employee.name);
+    $('#emp-meta-role').text(employee.role + ' • ' + employee.department);
+    $('#emp-meta-email').text(employee.email);
+    $('#employee-info-card').slideDown(200);
 
-  $('#candidate-modal').fadeOut(200);
+    const prevAvg = employee.prevQuarterAvg || 3.0;
+    $('#prev-score-val').text(prevAvg.toFixed(1));
+    $('#prev-score-desc').text('Previous Quarter Baseline');
+    $('#comp-prev-val').text(prevAvg.toFixed(1));
 
-  // Trigger AJAX Update
-  updateCandidateStageAjax(candidateId, newStage, $card, originStage);
+    if (radarChartInstance && employee.prevKpis) {
+      radarChartInstance.data.datasets[1].data = [
+        employee.prevKpis.quality || prevAvg,
+        employee.prevKpis.punctuality || prevAvg,
+        employee.prevKpis.teamwork || prevAvg,
+        employee.prevKpis.problemSolving || prevAvg,
+        employee.prevKpis.communication || prevAvg
+      ];
+      radarChartInstance.update();
+    }
+
+    calculateWeightedScore();
+  });
+
+  $('.save').on('click', function() {
+    saveDraftManual();
+  });
+
+  $('#btn-submit-review').on('click', function() {
+    submitReviewForm();
+  });
+
+  $('#btn-reset-form').on('click', function() {
+    resetReviewForm();
+  });
+
+  $('#btn-export-pdf').on('click', function() {
+    window.print();
+  });
 }
 
-/**
- * ----------------------------------------------------------------------------
- * 7. Bonus Point: Undo Last Move
- * ----------------------------------------------------------------------------
- */
-function handleUndoLastMove() {
-  if (!AppState.lastMove) {
-    showToast('No move available to undo.', 'info');
-    return;
-  }
+function saveDraftManual() {
+  const draftData = getFormDraftData();
 
-  const { candidateId, prevStage, newStage } = AppState.lastMove;
-  const candidate = AppState.candidates.find(c => c.id === candidateId);
-  if (!candidate) return;
+  $('.save').text('Saving...').addClass('loading').delay(500).text('Saved');
 
-  console.log(`[Undo] Reverting #${candidateId} from ${newStage} back to ${prevStage}`);
+  setTimeout(function() {
+    $('.save').removeClass('loading').html('<i class="fa-solid fa-floppy-disk"></i> Save Draft');
+  }, 1200);
 
-  const $card = $(`.kanban-card[data-id="${candidateId}"]`);
-  const $targetCardsContainer = $(`.column[data-stage="${prevStage}"] .column-cards`);
+  localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
 
-  // Animate DOM move back
-  $card.detach().prependTo($targetCardsContainer);
+  const now = new Date().toLocaleTimeString();
+  $('#save-status-indicator')
+    .removeClass('saved saving')
+    .addClass('saved')
+    .html('<i class="fa-solid fa-check"></i> Draft saved at ' + now);
 
-  // Clear undo state to avoid double undo
-  AppState.lastMove = null;
+  showToast('Review draft saved successfully!', 'toast-info');
+}
 
-  // Add undo to candidate history
-  const today = new Date().toISOString().split('T')[0];
-  candidate.history.push(`${today}: Move reverted back to ${formatStageName(prevStage)} (Undo)`);
-  candidate.stage = prevStage;
+function autoSaveDraft() {
+  const empId = $('#employee-select').val();
+  const hasInput = empId || $('#review-comment').val().trim().length > 0 || $('#kpi-quality').val();
 
-  updateColumnCounters();
+  if (!hasInput) return;
 
-  // Sync with server/storage
-  if (AppState.isServerOnline) {
-    $.ajax({
-      url: `${API_BASE_URL}/candidates/${candidateId}`,
-      type: 'PATCH',
-      contentType: 'application/json',
-      data: JSON.stringify({
-        stage: prevStage,
-        history: candidate.history
-      }),
-      success: function () {
-        triggerPulseEffect($card);
-        saveToLocalStorage(AppState.candidates);
-        showToast(`Undone: Moved <strong>${candidate.name}</strong> back to <em>${formatStageName(prevStage)}</em>`, 'info');
-      }
+  const draftData = getFormDraftData();
+  localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+
+  const now = new Date().toLocaleTimeString();
+  $('#save-status-indicator')
+    .removeClass('saved saving')
+    .addClass('saving')
+    .html('<i class="fa-solid fa-arrows-rotate fa-spin"></i> Auto-saving...')
+    .delay(600)
+    .queue(function(next) {
+      $(this)
+        .removeClass('saving')
+        .addClass('saved')
+        .html('<i class="fa-solid fa-check"></i> Draft auto-saved at ' + now);
+      next();
     });
-  } else {
-    triggerPulseEffect($card);
-    saveToLocalStorage(AppState.candidates);
-    showToast(`Undone: Moved <strong>${candidate.name}</strong> back to <em>${formatStageName(prevStage)}</em>`, 'info');
-  }
 }
 
-/**
- * ----------------------------------------------------------------------------
- * 8. Add Candidate Form with RegEx Validation & Duplicate Prevention
- * ----------------------------------------------------------------------------
- */
-function handleAddCandidateSubmit() {
-  const name = $('#cand-name').val().trim();
-  const email = $('#cand-email').val().trim();
-  const role = $('#cand-role').val();
-  const score = parseFloat($('#cand-score').val());
-  const date = $('#cand-date').val();
-  const stage = $('#cand-stage').val();
+function startAutoSaveTimer() {
+  setInterval(autoSaveDraft, 30000);
+}
+
+function getFormDraftData() {
+  return {
+    employeeId: $('#employee-select').val(),
+    reviewer: $('#reviewer-input').val().trim(),
+    quarter: $('#review-quarter').val(),
+    kpis: {
+      quality: $('#kpi-quality').val(),
+      punctuality: $('#kpi-punctuality').val(),
+      teamwork: $('#kpi-teamwork').val(),
+      problemSolving: $('#kpi-problemSolving').val(),
+      communication: $('#kpi-communication').val()
+    },
+    comment: $('#review-comment').val(),
+    timestamp: new Date().toLocaleString()
+  };
+}
+
+function setupRestoreBanner() {
+  const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+  if (savedDraft) {
+    try {
+      const data = JSON.parse(savedDraft);
+      $('#restore-timestamp-msg').text('Unsaved review draft detected from ' + (data.timestamp || 'previous session') + '. Would you like to restore it?');
+      $('#restore-banner').slideDown(300);
+    } catch (e) {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    }
+  }
+
+  $('#btn-restore-draft').on('click', function() {
+    restoreDraftData();
+    $('#restore-banner').slideUp(200);
+    showToast('Draft restored into review form.', 'toast-success');
+  });
+
+  $('#btn-discard-draft').on('click', function() {
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    $('#restore-banner').slideUp(200);
+    showToast('Saved draft discarded.', 'toast-info');
+  });
+}
+
+function restoreDraftData() {
+  const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+  if (!raw) return;
+
+  try {
+    const data = JSON.parse(raw);
+    if (data.employeeId) {
+      $('#employee-select').val(data.employeeId).trigger('change');
+    }
+    if (data.reviewer) {
+      $('#reviewer-input').val(data.reviewer);
+    }
+    if (data.quarter) {
+      $('#review-quarter').val(data.quarter);
+    }
+
+    if (data.kpis) {
+      for (const kpiKey in data.kpis) {
+        const val = data.kpis[kpiKey];
+        if (val) {
+          const container = $('.star-rating[data-kpi="' + kpiKey + '"]');
+          container.find('.star[data-val="' + val + '"]').trigger('click');
+        }
+      }
+    }
+
+    if (data.comment) {
+      $('#review-comment').val(data.comment).trigger('input');
+    }
+  } catch (e) {}
+}
+
+function submitReviewForm() {
+  $('#validation-alert').hide();
+  $('.field-error').text('');
+  $('.form-control').removeClass('is-invalid');
+  $('.kpi-row').removeClass('unrated-error');
 
   let isValid = true;
 
-  // Validation 1: Name RegEx (3 to 50 characters, letters and spaces only)
-  const nameRegex = /^[A-Za-z\s]{3,50}$/;
-  if (!nameRegex.test(name)) {
-    $('#cand-name').addClass('is-invalid');
-    $('#feedback-name').show();
+  const empIdVal = $('#employee-select').val();
+  if (!empIdVal) {
+    $('#employee-select').addClass('is-invalid');
+    $('#error-employee').text('Please select an employee to review.');
     isValid = false;
-  } else {
-    $('#cand-name').removeClass('is-invalid');
-    $('#feedback-name').hide();
   }
 
-  // Validation 2: Email RegEx
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  if (!emailRegex.test(email)) {
-    $('#cand-email').addClass('is-invalid');
-    $('#feedback-email').show();
+  const reviewerVal = $('#reviewer-input').val().trim();
+  if (!reviewerVal) {
+    $('#reviewer-input').addClass('is-invalid');
+    $('#error-reviewer').text('Reviewer identifier is required.');
     isValid = false;
-  } else {
-    $('#cand-email').removeClass('is-invalid');
-    $('#feedback-email').hide();
   }
 
-  // Validation 3: Role selection
-  if (!role) {
-    $('#cand-role').addClass('is-invalid');
-    $('#feedback-role').show();
-    isValid = false;
-  } else {
-    $('#cand-role').removeClass('is-invalid');
-    $('#feedback-role').hide();
-  }
-
-  // Validation 4: Score Range (0.0 to 10.0)
-  if (isNaN(score) || score < 0 || score > 10) {
-    $('#cand-score').addClass('is-invalid');
-    $('#feedback-score').show();
-    isValid = false;
-  } else {
-    $('#cand-score').removeClass('is-invalid');
-    $('#feedback-score').hide();
-  }
-
-  // Validation 5: Interview Date
-  if (!date) {
-    $('#cand-date').addClass('is-invalid');
-    $('#feedback-date').show();
-    isValid = false;
-  } else {
-    $('#cand-date').removeClass('is-invalid');
-    $('#feedback-date').hide();
-  }
-
-  if (!isValid) return;
-
-  // Duplicate Check: Avoid Duplicate Entries by email or exact name
-  const isDuplicate = AppState.candidates.some(
-    c => c.email.toLowerCase() === email.toLowerCase() || c.name.toLowerCase() === name.toLowerCase()
-  );
-
-  if (isDuplicate) {
-    showToast(`⚠️ Duplicate candidate detected! A candidate with name "${name}" or email "${email}" already exists.`, 'warning');
-    return;
-  }
-
-  // Generate Unique ID
-  const maxId = AppState.candidates.length > 0
-    ? Math.max(...AppState.candidates.map(c => parseInt(c.id, 10) || 0))
-    : 200;
-  const newId = maxId + 1;
-
-  const newCandidate = {
-    id: newId,
-    name: name,
-    role: role,
-    stage: stage,
-    score: score,
-    interviewDate: date,
-    resumeUrl: '#',
-    email: email,
-    history: [
-      `${new Date().toISOString().split('T')[0]}: Applied for ${role}`
-    ]
-  };
-
-  // Check WIP Limit if directly adding to Interview
-  if (stage === 'interview') {
-    const currentInterviewCount = $('.column[data-stage="interview"] .kanban-card').length;
-    if (currentInterviewCount >= WIP_LIMIT_INTERVIEW) {
-      showToast(`⚠️ Cannot add to Interview stage: WIP limit (${WIP_LIMIT_INTERVIEW}) reached.`, 'warning');
-      return;
+  const missingKpis = [];
+  const kpiValues = {};
+  for (const kpiKey in KPI_CONFIG) {
+    const val = $('#kpi-' + kpiKey).val();
+    if (!val) {
+      missingKpis.push(KPI_CONFIG[kpiKey].name);
+      $('.kpi-row[data-kpi="' + kpiKey + '"]').addClass('unrated-error');
+      isValid = false;
+    } else {
+      kpiValues[kpiKey] = parseInt(val, 10);
     }
   }
 
-  // Save candidate
-  if (AppState.isServerOnline) {
-    $.ajax({
-      url: `${API_BASE_URL}/candidates`,
-      type: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify(newCandidate),
-      success: function (created) {
-        AppState.candidates.push(created);
-        saveToLocalStorage(AppState.candidates);
-        appendNewCandidateCard(created);
-        $('#add-candidate-modal').fadeOut(200);
-        showToast(`Candidate <strong>${name}</strong> added successfully!`, 'success');
-      },
-      error: function () {
-        // Fallback save locally if POST fails
-        AppState.candidates.push(newCandidate);
-        saveToLocalStorage(AppState.candidates);
-        appendNewCandidateCard(newCandidate);
-        $('#add-candidate-modal').fadeOut(200);
-        showToast(`Candidate added to LocalStorage!`, 'success');
-      }
-    });
+  if (missingKpis.length > 0) {
+    $('#error-kpis').text('Required: Please rate all 5 core KPIs with stars.');
+  }
+
+  const commentVal = $('#review-comment').val().trim();
+  const isStrict = hasLowRating();
+  if (isStrict && commentVal.length < 20) {
+    $('#review-comment').addClass('is-invalid');
+    $('#error-comment').text('A minimum 20-character managerial comment is mandatory when any rating is below 3 stars.');
+    isValid = false;
+  }
+
+  if (!isValid) {
+    $('#validation-alert-msg').text('Form contains validation errors. Please complete all required ratings and comments.');
+    $('#validation-alert').slideDown(250);
+    return;
+  }
+
+  const employee = employeeList.find(e => e.id === parseInt(empIdVal, 10));
+  const weightedScore = parseFloat($('#live-weighted-score').text());
+  const quarterVal = $('#review-quarter').val();
+
+  const newReview = {
+    id: 'REV-' + empIdVal + '-' + quarterVal.replace('-', ''),
+    employeeId: parseInt(empIdVal, 10),
+    employeeName: employee ? employee.name : 'Employee ' + empIdVal,
+    role: employee ? employee.role : 'Staff',
+    department: employee ? employee.department : 'General',
+    quarter: quarterVal,
+    kpis: kpiValues,
+    weights: {
+      quality: KPI_CONFIG.quality.weight,
+      punctuality: KPI_CONFIG.punctuality.weight,
+      teamwork: KPI_CONFIG.teamwork.weight,
+      problemSolving: KPI_CONFIG.problemSolving.weight,
+      communication: KPI_CONFIG.communication.weight
+    },
+    avg: weightedScore,
+    reviewer: reviewerVal,
+    comment: commentVal,
+    status: 'submitted',
+    date: new Date().toISOString().split('T')[0]
+  };
+
+  $('#btn-submit-review').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Submitting...');
+
+  $.ajax({
+    url: API_BASE + '/reviews',
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(newReview)
+  })
+  .done(function(savedData) {
+    handleSubmissionSuccess(savedData);
+  })
+  .fail(function() {
+    handleSubmissionFallback(newReview);
+  })
+  .always(function() {
+    $('#btn-submit-review').prop('disabled', false).html('<i class="fa-solid fa-paper-plane"></i> Submit Review');
+  });
+}
+
+function handleSubmissionSuccess(savedData) {
+  reviewList.unshift(savedData);
+  localStorage.removeItem(DRAFT_STORAGE_KEY);
+  $('#restore-banner').slideUp(200);
+
+  updateReviewCounts();
+  showToast('Performance review submitted successfully!', 'toast-success');
+  resetReviewForm();
+
+  $('.tab-btn[data-tab="tab-reviews"]').trigger('click');
+}
+
+function handleSubmissionFallback(newReview) {
+  const existingIdx = reviewList.findIndex(r => r.id === newReview.id);
+  if (existingIdx >= 0) {
+    reviewList[existingIdx] = newReview;
   } else {
-    AppState.candidates.push(newCandidate);
-    saveToLocalStorage(AppState.candidates);
-    appendNewCandidateCard(newCandidate);
-    $('#add-candidate-modal').fadeOut(200);
-    showToast(`Candidate <strong>${name}</strong> added to LocalStorage!`, 'success');
+    reviewList.unshift(newReview);
+  }
+
+  localStorage.removeItem(DRAFT_STORAGE_KEY);
+  $('#restore-banner').slideUp(200);
+
+  updateReviewCounts();
+  showToast('Review recorded locally (offline mode active).', 'toast-info');
+  resetReviewForm();
+
+  $('.tab-btn[data-tab="tab-reviews"]').trigger('click');
+}
+
+function resetReviewForm() {
+  $('#employee-select').val('').trigger('change');
+  $('#reviewer-input').val('manager_01');
+  $('#review-quarter').val('Q4-2026');
+
+  $('.kpi-hidden-val').val('');
+  $('.star').removeClass('hovered selected');
+  $('.rating-text-badge').text('Not Rated').removeClass('rated-good rated-warning rated-danger');
+  $('.kpi-row').removeClass('unrated-error');
+
+  $('#review-comment').val('').removeClass('is-invalid');
+  $('#char-counter').text('0 characters').removeClass('valid-count invalid-count');
+  $('#error-comment').text('');
+  $('#error-kpis').text('');
+  $('#error-employee').text('');
+  $('#validation-alert').hide();
+
+  $('#live-weighted-score').text('0.00');
+  $('#comp-curr-val').text('0.00');
+  $('#comp-delta-badge').text('0.00').removeClass('positive negative');
+  updateScoreAppearance(0, false);
+  checkCommentRequirementRule();
+
+  if (radarChartInstance) {
+    radarChartInstance.data.datasets[0].data = [0, 0, 0, 0, 0];
+    radarChartInstance.data.datasets[1].data = [0, 0, 0, 0, 0];
+    radarChartInstance.update();
   }
 }
 
-function appendNewCandidateCard(candidate) {
-  const cardHtml = createCardElement(candidate);
-  const $targetColumn = $(`.column[data-stage="${candidate.stage}"] .column-cards`);
-  $targetColumn.find('.empty-state').remove();
-  const $newCard = $(cardHtml).hide().prependTo($targetColumn).fadeIn(400);
-  triggerPulseEffect($newCard);
-  updateColumnCounters();
+function loadInitialData() {
+  $.ajax({
+    url: API_BASE + '/employees',
+    method: 'GET'
+  })
+  .done(function(data) {
+    employeeList = data;
+    populateEmployeeDropdown(employeeList);
+  })
+  .fail(function() {
+    loadFallbackEmployees();
+  });
+
+  $.ajax({
+    url: API_BASE + '/reviews',
+    method: 'GET'
+  })
+  .done(function(data) {
+    reviewList = data;
+    updateReviewCounts();
+    renderReviewsTable(reviewList);
+  })
+  .fail(function() {
+    loadFallbackReviews();
+  });
 }
 
-function resetAddCandidateForm() {
-  $('#add-candidate-form')[0].reset();
-  $('.form-control').removeClass('is-invalid');
-  $('.validation-feedback').hide();
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  $('#cand-date').val(tomorrow.toISOString().split('T')[0]);
+function populateEmployeeDropdown(list) {
+  const select = $('#employee-select');
+  select.find('option:not(:first)').remove();
+
+  list.forEach(function(emp) {
+    select.append(
+      $('<option></option>')
+        .val(emp.id)
+        .text(emp.name + ' - ' + emp.role + ' (' + emp.department + ')')
+    );
+  });
 }
 
-/**
- * ----------------------------------------------------------------------------
- * 9. Toast Notifications System
- * ----------------------------------------------------------------------------
- */
-function showToast(message, type = 'info', showUndo = false) {
-  const toastId = 'toast-' + Date.now();
-  let toastClass = 'toast-info';
-  let icon = '<i class="fa-solid fa-circle-info"></i>';
+function updateReviewCounts() {
+  $('#total-reviews-count').text(reviewList.length);
 
-  if (type === 'success') {
-    toastClass = 'toast-success';
-    icon = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i>';
-  } else if (type === 'warning') {
-    toastClass = 'toast-warning';
-    icon = '<i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i>';
-  } else if (type === 'error') {
-    toastClass = 'toast-error';
-    icon = '<i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i>';
+  const atRisk = $.grep(reviewList, r => r.avg < 3);
+  $('#at-risk-count').text(atRisk.length);
+  $('#at-risk-stat-number').text(atRisk.length);
+}
+
+function renderReviewsTable(reviews) {
+  const tbody = $('#all-reviews-tbody');
+  tbody.empty();
+
+  if (!reviews || reviews.length === 0) {
+    tbody.append('<tr><td colspan="8" class="text-center py-4">No reviews recorded yet.</td></tr>');
+    return;
   }
 
-  const undoHtml = showUndo
-    ? `<button class="toast-undo-btn" id="btn-undo-move"><i class="fa-solid fa-rotate-left"></i> Undo</button>`
-    : '';
+  reviews.forEach(function(r) {
+    const isAtRisk = r.avg < 3;
+    let badgeClass = 'score-good';
+    let statusText = 'Exceeds / Meets';
 
-  const toastHtml = `
-    <div class="toast ${toastClass}" id="${toastId}">
-      ${icon}
-      <span class="toast-message">${message}</span>
-      ${undoHtml}
-    </div>
-  `;
+    if (r.avg < 3) {
+      badgeClass = 'score-danger';
+      statusText = 'At-Risk (< 3.0)';
+    } else if (r.avg < 3.5) {
+      badgeClass = 'score-warning';
+      statusText = 'Satisfactory';
+    }
 
-  const $toast = $(toastHtml).hide().appendTo('#toast-container').slideDown(250);
+    const tr = $('<tr></tr>');
+    tr.html(
+      '<td><strong>' + r.id + '</strong></td>' +
+      '<td>' + r.employeeName + '<br><small class="text-muted">' + (r.role || '') + '</small></td>' +
+      '<td>' + (r.department || '-') + '</td>' +
+      '<td>' + (r.quarter || 'Q4-2026') + '</td>' +
+      '<td><span class="badge-score ' + badgeClass + '">' + Number(r.avg).toFixed(2) + ' / 5.0</span></td>' +
+      '<td>' + statusText + '</td>' +
+      '<td>' + (r.reviewer || '-') + '</td>' +
+      '<td><button type="button" class="btn btn-sm btn-outline btn-view-review" data-id="' + r.id + '"><i class="fa-solid fa-eye"></i> View</button></td>'
+    );
+    tbody.append(tr);
+  });
 
-  // Auto remove after 5 seconds
-  setTimeout(function () {
-    $toast.fadeOut(300, function () {
-      $(this).remove();
-    });
-  }, 5000);
+  $('.btn-view-review').on('click', function() {
+    const reviewId = $(this).data('id');
+    const review = reviewList.find(r => r.id === reviewId);
+    if (review) {
+      openReviewModal(review);
+    }
+  });
 }
 
-/**
- * ----------------------------------------------------------------------------
- * 10. Helper Utilities
- * ----------------------------------------------------------------------------
- */
-function formatStageName(stage) {
-  switch (stage) {
-    case 'applied': return 'Applied';
-    case 'screening': return 'Screening';
-    case 'interview': return 'Interview';
-    case 'hired_rejected': return 'Hired / Rejected';
-    default: return stage;
+function renderAtRiskList() {
+  const atRiskReviews = $.grep(reviewList, r => r.avg < 3);
+
+  $('#at-risk-stat-number').text(atRiskReviews.length);
+  const container = $('#at-risk-list-container');
+  container.empty();
+
+  if (atRiskReviews.length === 0) {
+    container.html('<div class="card text-center py-4"><i class="fa-solid fa-circle-check text-success" style="font-size: 2rem;"></i><h3 style="margin-top: 0.5rem;">All Clear!</h3><p>No employees currently have an average rating below 3.0.</p></div>');
+    return;
   }
+
+  atRiskReviews.forEach(function(r) {
+    const card = $('<div class="at-risk-card"></div>');
+    const kpiSummary = r.kpis ? Object.keys(r.kpis).map(k => k + ': ' + r.kpis[k] + '★').join(' • ') : 'Ratings recorded';
+
+    card.html(
+      '<div class="at-risk-info">' +
+        '<div class="at-risk-card-heading">' +
+          '<span class="at-risk-name">' + r.employeeName + '</span>' +
+          '<span class="at-risk-dept">' + (r.role || 'Role') + ' • ' + (r.department || 'Department') + '</span>' +
+        '</div>' +
+        '<div style="font-size: 0.82rem; color: #64748b;"><strong>Breakdown:</strong> ' + kpiSummary + '</div>' +
+        '<div class="at-risk-feedback">' +
+          '<strong>Manager Feedback:</strong> "' + (r.comment || 'Performance issues noted.') + '"' +
+        '</div>' +
+      '</div>' +
+      '<div class="at-risk-actions">' +
+        '<div class="at-risk-score-badge">' +
+          '<i class="fa-solid fa-triangle-exclamation"></i> ' + Number(r.avg).toFixed(2) +
+        '</div>' +
+        '<button type="button" class="btn btn-sm btn-primary btn-pip-action" data-id="' + r.id + '" data-name="' + r.employeeName + '">' +
+          '<i class="fa-solid fa-clipboard-list"></i> Schedule HR PIP' +
+        '</button>' +
+      '</div>'
+    );
+
+    container.append(card);
+  });
+
+  $('.btn-pip-action').on('click', function() {
+    const name = $(this).data('name');
+    showToast('HR Intervention PIP initiated for ' + name + '.', 'toast-danger');
+  });
 }
 
-function escapeHtml(string) {
-  if (!string) return '';
-  return String(string)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+function setupSearchAndFilters() {
+  $('#review-search-input').on('keyup', function() {
+    applyReviewTableFilters();
+  });
+
+  $('#review-department-filter').on('change', function() {
+    applyReviewTableFilters();
+  });
+}
+
+function applyReviewTableFilters() {
+  const query = $('#review-search-input').val().toLowerCase().trim();
+  const dept = $('#review-department-filter').val();
+
+  const filtered = reviewList.filter(function(r) {
+    const matchesQuery = !query ||
+      r.employeeName.toLowerCase().includes(query) ||
+      (r.role && r.role.toLowerCase().includes(query)) ||
+      r.id.toLowerCase().includes(query);
+
+    const matchesDept = dept === 'all' || r.department === dept;
+
+    return matchesQuery && matchesDept;
+  });
+
+  renderReviewsTable(filtered);
+}
+
+function setupModal() {
+  $('#btn-close-modal, #btn-modal-dismiss').on('click', function() {
+    $('#review-modal').fadeOut(200);
+  });
+
+  $('#btn-modal-print').on('click', function() {
+    window.print();
+  });
+}
+
+function openReviewModal(r) {
+  $('#modal-review-title').text('Evaluation: ' + r.employeeName + ' (' + (r.quarter || 'Q4-2026') + ')');
+
+  let kpiRowsHtml = '';
+  if (r.kpis) {
+    for (const key in r.kpis) {
+      const score = r.kpis[key];
+      const stars = '★'.repeat(score) + '☆'.repeat(5 - score);
+      kpiRowsHtml += '<div style="display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px dashed #e2e8f0;">' +
+        '<span>' + (KPI_CONFIG[key] ? KPI_CONFIG[key].name : key) + '</span>' +
+        '<span style="color: #f59e0b; font-weight: 700;">' + stars + ' (' + score + '/5)</span>' +
+      '</div>';
+    }
+  }
+
+  const modalContent =
+    '<div style="margin-bottom: 1rem;">' +
+      '<p><strong>Employee ID:</strong> ' + (r.employeeId || '-') + ' | <strong>Role:</strong> ' + (r.role || '-') + '</p>' +
+      '<p><strong>Department:</strong> ' + (r.department || '-') + ' | <strong>Reviewer:</strong> ' + (r.reviewer || '-') + '</p>' +
+      '<p><strong>Review ID:</strong> ' + r.id + ' | <strong>Date:</strong> ' + (r.date || '-') + '</p>' +
+    '</div>' +
+    '<div style="background: #f8fafc; padding: 0.85rem; border-radius: 8px; margin-bottom: 1rem;">' +
+      '<h4 style="margin-bottom: 0.5rem; font-size: 0.95rem;">KPI Scorecard</h4>' +
+      kpiRowsHtml +
+      '<div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-weight: 800; font-size: 1.05rem;">' +
+        '<span>Final Weighted Average:</span>' +
+        '<span style="color: ' + (r.avg < 3 ? '#ef4444' : '#10b981') + ';">' + Number(r.avg).toFixed(2) + ' / 5.0</span>' +
+      '</div>' +
+    '</div>' +
+    '<div>' +
+      '<h4 style="font-size: 0.95rem; margin-bottom: 0.35rem;">Manager Comments & Evaluation</h4>' +
+      '<p style="background: #f1f5f9; padding: 0.75rem; border-radius: 6px; font-size: 0.9rem; line-height: 1.4;">' + (r.comment || 'No feedback comments entered.') + '</p>' +
+    '</div>';
+
+  $('#modal-review-body').html(modalContent);
+  $('#review-modal').fadeIn(200);
+}
+
+function showToast(message, typeClass) {
+  const toast = $('<div class="toast ' + (typeClass || 'toast-info') + '"></div>');
+  toast.html('<i class="fa-solid fa-circle-info"></i> <span>' + message + '</span>');
+  $('#toast-container').append(toast);
+
+  toast.fadeIn(200).delay(2600).fadeOut(300, function() {
+    $(this).remove();
+  });
+}
+
+function loadFallbackEmployees() {
+  employeeList = [
+    { id: 101, name: 'Rahul Sharma', role: 'Frontend Developer', department: 'Engineering', email: 'rahul.sharma@example.com', prevQuarterAvg: 3.8, prevKpis: { quality: 4, punctuality: 4, teamwork: 4, problemSolving: 3, communication: 4 } },
+    { id: 102, name: 'Priya Patel', role: 'UI/UX Designer', department: 'Design', email: 'priya.patel@example.com', prevQuarterAvg: 4.2, prevKpis: { quality: 5, punctuality: 4, teamwork: 4, problemSolving: 4, communication: 4 } },
+    { id: 103, name: 'Amit Verma', role: 'QA Engineer', department: 'Quality Assurance', email: 'amit.verma@example.com', prevQuarterAvg: 2.6, prevKpis: { quality: 3, punctuality: 2, teamwork: 3, problemSolving: 2, communication: 3 } },
+    { id: 104, name: 'Sneha Reddy', role: 'Backend Developer', department: 'Engineering', email: 'sneha.reddy@example.com', prevQuarterAvg: 3.5, prevKpis: { quality: 4, punctuality: 3, teamwork: 4, problemSolving: 3, communication: 3 } },
+    { id: 105, name: 'Vikram Singh', role: 'DevOps Engineer', department: 'Operations', email: 'vikram.singh@example.com', prevQuarterAvg: 2.4, prevKpis: { quality: 2, punctuality: 3, teamwork: 2, problemSolving: 3, communication: 2 } },
+    { id: 106, name: 'Ananya Joshi', role: 'Product Manager', department: 'Product', email: 'ananya.joshi@example.com', prevQuarterAvg: 4.5, prevKpis: { quality: 5, punctuality: 4, teamwork: 5, problemSolving: 4, communication: 5 } },
+    { id: 107, name: 'Karan Malhotra', role: 'Full Stack Dev', department: 'Engineering', email: 'karan.malhotra@example.com', prevQuarterAvg: 3.2, prevKpis: { quality: 3, punctuality: 3, teamwork: 4, problemSolving: 3, communication: 3 } },
+    { id: 108, name: 'Isha Bhatia', role: 'Payroll Specialist', department: 'Human Resources', email: 'isha.bhatia@example.com', prevQuarterAvg: 2.2, prevKpis: { quality: 2, punctuality: 2, teamwork: 3, problemSolving: 2, communication: 2 } }
+  ];
+  populateEmployeeDropdown(employeeList);
+}
+
+function loadFallbackReviews() {
+  reviewList = [
+    {
+      id: 'REV-101-Q4',
+      employeeId: 101,
+      employeeName: 'Rahul Sharma',
+      role: 'Frontend Developer',
+      department: 'Engineering',
+      quarter: 'Q4-2026',
+      kpis: { quality: 4, punctuality: 3, teamwork: 5, problemSolving: 4, communication: 4 },
+      weights: { quality: 0.25, punctuality: 0.20, teamwork: 0.20, problemSolving: 0.20, communication: 0.15 },
+      avg: 4.0,
+      reviewer: 'manager_01',
+      comment: 'Consistently delivered robust and responsive frontend components during the recent major payroll release.',
+      status: 'submitted',
+      date: '2026-09-15'
+    },
+    {
+      id: 'REV-102-Q4',
+      employeeId: 102,
+      employeeName: 'Priya Patel',
+      role: 'UI/UX Designer',
+      department: 'Design',
+      quarter: 'Q4-2026',
+      kpis: { quality: 5, punctuality: 4, teamwork: 4, problemSolving: 5, communication: 4 },
+      weights: { quality: 0.25, punctuality: 0.20, teamwork: 0.20, problemSolving: 0.20, communication: 0.15 },
+      avg: 4.45,
+      reviewer: 'manager_01',
+      comment: 'Outstanding design prototypes and accessibility enhancements across all mobile touchpoints.',
+      status: 'submitted',
+      date: '2026-09-18'
+    },
+    {
+      id: 'REV-103-Q4',
+      employeeId: 103,
+      employeeName: 'Amit Verma',
+      role: 'QA Engineer',
+      department: 'Quality Assurance',
+      quarter: 'Q4-2026',
+      kpis: { quality: 2, punctuality: 2, teamwork: 3, problemSolving: 2, communication: 2 },
+      weights: { quality: 0.25, punctuality: 0.20, teamwork: 0.20, problemSolving: 0.20, communication: 0.15 },
+      avg: 2.2,
+      reviewer: 'manager_01',
+      comment: 'Repeated regressions identified in build cycles; needs urgent structured training on automation frameworks.',
+      status: 'submitted',
+      date: '2026-09-20'
+    },
+    {
+      id: 'REV-105-Q4',
+      employeeId: 105,
+      employeeName: 'Vikram Singh',
+      role: 'DevOps Engineer',
+      department: 'Operations',
+      quarter: 'Q4-2026',
+      kpis: { quality: 2, punctuality: 3, teamwork: 2, problemSolving: 3, communication: 2 },
+      weights: { quality: 0.25, punctuality: 0.20, teamwork: 0.20, problemSolving: 0.20, communication: 0.15 },
+      avg: 2.4,
+      reviewer: 'manager_02',
+      comment: 'Server maintenance bottlenecks delayed production releases; requires immediate performance coaching.',
+      status: 'submitted',
+      date: '2026-09-22'
+    },
+    {
+      id: 'REV-108-Q4',
+      employeeId: 108,
+      employeeName: 'Isha Bhatia',
+      role: 'Payroll Specialist',
+      department: 'Human Resources',
+      quarter: 'Q4-2026',
+      kpis: { quality: 2, punctuality: 2, teamwork: 2, problemSolving: 2, communication: 2 },
+      weights: { quality: 0.25, punctuality: 0.20, teamwork: 0.20, problemSolving: 0.20, communication: 0.15 },
+      avg: 2.0,
+      reviewer: 'manager_03',
+      comment: 'Critical compliance report discrepancies observed this quarter requiring targeted intervention and review.',
+      status: 'submitted',
+      date: '2026-09-24'
+    }
+  ];
+  updateReviewCounts();
+  renderReviewsTable(reviewList);
 }

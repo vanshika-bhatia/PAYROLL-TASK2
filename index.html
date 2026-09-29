@@ -3,389 +3,447 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recruitment Kanban Board (Drag-Drop Pipeline) | Employee Payroll Hub</title>
-  
-  <!-- Favicon icon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
-  
-  <!-- Font Awesome Icons -->
+  <title>Performance Review & Rating Module | BHATIA-T2</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
-  <!-- jQuery UI CSS -->
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-  
-  <!-- Custom Modern Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-  <!-- Top Application Header -->
   <header class="app-header">
     <div class="header-container">
-      <div class="brand-section">
+      <div class="brand">
         <div class="brand-icon">
-          <i class="fa-solid fa-users-gear"></i>
+          <i class="fa-solid fa-chart-line"></i>
         </div>
-        <div class="brand-title">
-          <h1>
-            Recruitment Kanban Board 
-            <span class="badge-tag">BHATIA-T1</span>
-          </h1>
-          <p>Drag-and-Drop Candidate Pipeline • Talent & Payroll Onboarding</p>
+        <div>
+          <div class="brand-heading">
+            <h1>Performance Review & Rating Module</h1>
+            <span class="badge-tag">BHATIA-T2</span>
+          </div>
+          <p class="brand-subtitle">360° Review Form • Star Ratings • Live Weighted Scores • Grep Filter</p>
         </div>
       </div>
 
-      <!-- Search, Server Status, and Quick Action -->
-      <div class="header-actions">
-        <!-- Live Search within board -->
-        <div class="search-box">
-          <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input 
-            type="text" 
-            id="candidate-search" 
-            class="search-input" 
-            placeholder="Search candidate name or role..." 
-            autocomplete="off"
-          >
-        </div>
-
-        <!-- Role Filter Dropdown -->
-        <select id="role-filter" class="sort-select" style="padding: 0.55rem 0.75rem; border-radius: 9999px;">
-          <option value="all">All Roles</option>
-          <option value="Frontend Dev">Frontend Dev</option>
-          <option value="Backend Dev">Backend Dev</option>
-          <option value="Full Stack Dev">Full Stack Dev</option>
-          <option value="UI/UX Designer">UI/UX Designer</option>
-          <option value="QA Engineer">QA Engineer</option>
-          <option value="DevOps Engineer">DevOps Engineer</option>
-          <option value="Product Manager">Product Manager</option>
-          <option value="Data Analyst">Data Analyst</option>
-          <option value="Payroll Specialist">Payroll Specialist</option>
-          <option value="HR Executive">HR Executive</option>
-        </select>
-
-        <!-- Status Indicator Pill -->
-        <div id="server-status" class="status-pill" title="Server Connection Status">
-          <span class="status-dot"></span>
-          <span id="server-status-text">Checking server...</span>
-        </div>
-
-        <!-- Add Candidate Button -->
-        <button id="btn-open-add-modal" class="btn btn-primary">
-          <i class="fa-solid fa-user-plus"></i> Add Candidate
-        </button>
+      <div class="header-topics">
+        <span class="topic-chip"><i class="fa-solid fa-file-lines"></i> Forms</span>
+        <span class="topic-chip"><i class="fa-solid fa-circle-check"></i> Validations</span>
+        <span class="topic-chip"><i class="fa-solid fa-link"></i> Chaining</span>
+        <span class="topic-chip"><i class="fa-solid fa-filter"></i> Grep</span>
+        <span class="topic-chip"><i class="fa-solid fa-floppy-disk"></i> LocalStorage</span>
       </div>
     </div>
   </header>
 
-  <!-- Metric / Summary Bar -->
-  <section class="metric-bar">
-    <div class="metric-container">
-      <div class="metric-item">
-        <span>Total Candidates: <strong id="total-candidates-count">0</strong></span>
-      </div>
-      <div class="metric-item">
-        <span>Active Pipeline: <strong id="active-candidates-count">0</strong></span>
-      </div>
-      <div class="metric-item">
-        <span>Interview WIP Limit: <strong>Max 10</strong></span>
-      </div>
-      <div class="metric-item">
-        <span>Tech Stack: <strong>HTML5 • CSS3 Flexbox • jQuery 3.7 • jQuery UI Sortable • JSON Server</strong></span>
+  <div class="sub-header">
+    <div class="sub-header-container">
+      <nav class="nav-tabs">
+        <button type="button" class="tab-btn active" data-tab="tab-form">
+          <i class="fa-solid fa-pen-to-square"></i> Review Form
+        </button>
+        <button type="button" class="tab-btn" data-tab="tab-reviews">
+          <i class="fa-solid fa-list-check"></i> All Reviews <span class="counter-badge" id="total-reviews-count">0</span>
+        </button>
+        <button type="button" class="tab-btn at-risk-tab" data-tab="tab-at-risk">
+          <i class="fa-solid fa-triangle-exclamation"></i> HR Intervention List <span class="counter-badge badge-danger" id="at-risk-count">0</span>
+        </button>
+      </nav>
+
+      <div class="header-status-area">
+        <span id="save-status-indicator" class="status-pill">
+          <i class="fa-solid fa-clock"></i> Auto-save ready (every 30s)
+        </span>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- Main Kanban Board Area -->
-  <main class="kanban-main">
-    <div class="kanban-board" id="kanban-board">
-      
-      <!-- Column 1: Applied -->
-      <section class="column" data-stage="applied">
-        <div class="column-header">
-          <div class="column-title-group">
-            <span class="column-title">
-              <i class="fa-regular fa-paper-plane" style="color: #3b82f6;"></i>
-              Applied
-            </span>
-            <span class="column-badge" id="badge-applied">0</span>
-          </div>
-          <div class="column-actions">
-            <select class="sort-select column-sort-trigger" data-stage="applied" title="Sort Column">
-              <option value="default">Sort: Default</option>
-              <option value="score-desc">Score: High &rarr; Low</option>
-              <option value="score-asc">Score: Low &rarr; High</option>
-              <option value="name-asc">Name: A &rarr; Z</option>
-            </select>
-          </div>
-        </div>
-        <div class="column-cards" data-stage="applied" id="cards-applied">
-          <!-- Candidate cards will be injected dynamically by jQuery -->
-        </div>
-      </section>
+  <div class="main-container">
 
-      <!-- Column 2: Screening -->
-      <section class="column" data-stage="screening">
-        <div class="column-header">
-          <div class="column-title-group">
-            <span class="column-title">
-              <i class="fa-solid fa-filter" style="color: #8b5cf6;"></i>
-              Screening
-            </span>
-            <span class="column-badge" id="badge-screening">0</span>
-          </div>
-          <div class="column-actions">
-            <select class="sort-select column-sort-trigger" data-stage="screening" title="Sort Column">
-              <option value="default">Sort: Default</option>
-              <option value="score-desc">Score: High &rarr; Low</option>
-              <option value="score-asc">Score: Low &rarr; High</option>
-              <option value="name-asc">Name: A &rarr; Z</option>
-            </select>
-          </div>
+    <div id="restore-banner" class="restore-banner" style="display: none;">
+      <div class="restore-banner-content">
+        <div class="restore-icon">
+          <i class="fa-solid fa-clock-rotate-left"></i>
         </div>
-        <div class="column-cards" data-stage="screening" id="cards-screening">
-          <!-- Candidate cards injected dynamically -->
-        </div>
-      </section>
-
-      <!-- Column 3: Interview (WIP Limit 10) -->
-      <section class="column" data-stage="interview">
-        <div class="column-header">
-          <div class="column-title-group">
-            <span class="column-title">
-              <i class="fa-solid fa-comments" style="color: #f59e0b;"></i>
-              Interview
-            </span>
-            <span class="column-badge" id="badge-interview">0</span>
-            <span class="wip-badge" title="Work in Progress Limit: Max 10 candidates in Interview stage">WIP 10</span>
-          </div>
-          <div class="column-actions">
-            <select class="sort-select column-sort-trigger" data-stage="interview" title="Sort Column">
-              <option value="default">Sort: Default</option>
-              <option value="score-desc">Score: High &rarr; Low</option>
-              <option value="score-asc">Score: Low &rarr; High</option>
-              <option value="name-asc">Name: A &rarr; Z</option>
-            </select>
-          </div>
-        </div>
-        <div class="column-cards" data-stage="interview" id="cards-interview">
-          <!-- Candidate cards injected dynamically -->
-        </div>
-      </section>
-
-      <!-- Column 4: Hired / Rejected -->
-      <section class="column" data-stage="hired_rejected">
-        <div class="column-header">
-          <div class="column-title-group">
-            <span class="column-title">
-              <i class="fa-solid fa-flag-checkered" style="color: #10b981;"></i>
-              Hired / Rejected
-            </span>
-            <span class="column-badge" id="badge-hired_rejected">0</span>
-          </div>
-          <div class="column-actions">
-            <select class="sort-select column-sort-trigger" data-stage="hired_rejected" title="Sort Column">
-              <option value="default">Sort: Default</option>
-              <option value="score-desc">Score: High &rarr; Low</option>
-              <option value="score-asc">Score: Low &rarr; High</option>
-              <option value="name-asc">Name: A &rarr; Z</option>
-            </select>
-          </div>
-        </div>
-        <div class="column-cards" data-stage="hired_rejected" id="cards-hired_rejected">
-          <!-- Candidate cards injected dynamically -->
-        </div>
-      </section>
-
-    </div>
-  </main>
-
-  <!-- Candidate Details & History Modal -->
-  <div class="modal-overlay" id="candidate-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modal-candidate-name">Candidate Details</h2>
-        <button class="modal-close" id="btn-close-details-modal" aria-label="Close modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
-          <div class="candidate-avatar" id="modal-candidate-avatar" style="width: 48px; height: 48px; font-size: 1.2rem;">PS</div>
-          <div>
-            <div id="modal-candidate-role" class="candidate-role" style="margin-bottom: 0.25rem;">Frontend Dev</div>
-            <div id="modal-candidate-id" class="candidate-id-badge">ID: #201</div>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; background: #f8fafc; padding: 1rem; border-radius: 8px;">
-          <div>
-            <small style="color: #64748b; display: block; font-weight: 600;">Technical Score</small>
-            <strong id="modal-candidate-score" style="font-size: 1.2rem; color: #15803d;">8.2 / 10</strong>
-          </div>
-          <div>
-            <small style="color: #64748b; display: block; font-weight: 600;">Interview Date</small>
-            <strong id="modal-candidate-date" style="font-size: 0.95rem;">2025-11-18</strong>
-          </div>
-          <div style="grid-column: span 2;">
-            <small style="color: #64748b; display: block; font-weight: 600;">Email Address</small>
-            <span id="modal-candidate-email" style="font-size: 0.9rem;">priya.sharma@example.com</span>
-          </div>
-          <div style="grid-column: span 2;">
-            <small style="color: #64748b; display: block; font-weight: 600;">Resume</small>
-            <a href="#" id="modal-candidate-resume" class="view-details-link" target="_blank">
-              <i class="fa-regular fa-file-pdf"></i> View Submitted Resume
-            </a>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="modal-stage-select">Change Pipeline Stage (Quick Action):</label>
-          <select id="modal-stage-select" class="form-control">
-            <option value="applied">Applied</option>
-            <option value="screening">Screening</option>
-            <option value="interview">Interview</option>
-            <option value="hired_rejected">Hired / Rejected</option>
-          </select>
-        </div>
-
         <div>
-          <label style="font-weight: 600; font-size: 0.825rem; color: #334155; display: block;">Pipeline Activity History:</label>
-          <ul class="history-timeline" id="modal-candidate-history">
-            <!-- Timeline items injected dynamically -->
-          </ul>
+          <h4 class="restore-title">Draft Found in LocalStorage</h4>
+          <p class="restore-text" id="restore-timestamp-msg">You have an unsaved review draft. Would you like to restore it?</p>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="btn-cancel-details">Close</button>
-        <button type="button" class="btn btn-primary" id="btn-save-details-stage">Update Stage</button>
+      <div class="restore-actions">
+        <button type="button" id="btn-restore-draft" class="btn btn-sm btn-primary">
+          <i class="fa-solid fa-rotate-left"></i> Restore Draft
+        </button>
+        <button type="button" id="btn-discard-draft" class="btn btn-sm btn-outline">
+          <i class="fa-solid fa-trash-can"></i> Discard
+        </button>
       </div>
     </div>
+
+    <section id="tab-form" class="tab-pane active">
+      <div class="form-layout">
+
+        <div class="form-main-column">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-user-tie"></i> Employee & Review Setup
+              </div>
+              <span class="required-indicator">* Required fields</span>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="employee-select" class="form-label">
+                  Select Employee <span class="text-danger">*</span>
+                </label>
+                <select id="employee-select" class="form-control" required>
+                  <option value="">-- Choose Employee to Review --</option>
+                </select>
+                <div class="field-error" id="error-employee"></div>
+              </div>
+
+              <div class="form-group">
+                <label for="reviewer-input" class="form-label">
+                  Reviewer ID / Name <span class="text-danger">*</span>
+                </label>
+                <input type="text" id="reviewer-input" class="form-control" value="manager_01" placeholder="e.g. manager_01" required>
+                <div class="field-error" id="error-reviewer"></div>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="review-quarter" class="form-label">Review Period</label>
+                <select id="review-quarter" class="form-control">
+                  <option value="Q4-2026" selected>Q4-2026 (Annual Review)</option>
+                  <option value="Q3-2026">Q3-2026</option>
+                  <option value="Q2-2026">Q2-2026</option>
+                  <option value="Q1-2026">Q1-2026</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Previous Quarter Rating</label>
+                <div id="prev-quarter-badge" class="prev-quarter-display">
+                  <span class="score-num" id="prev-score-val">--</span>
+                  <span class="score-desc" id="prev-score-desc">Select an employee</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="employee-info-card" class="employee-meta-banner" style="display: none;">
+              <div class="employee-meta-avatar" id="emp-avatar">--</div>
+              <div class="employee-meta-details">
+                <h3 id="emp-meta-name" class="emp-name">Employee Name</h3>
+                <p id="emp-meta-role" class="emp-role">Role • Department</p>
+                <p id="emp-meta-email" class="emp-email">email@example.com</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-star-half-stroke"></i> 5 Core KPI Ratings (1 to 5 Stars)
+              </div>
+              <span class="kpi-weight-note">Total Weight: 100%</span>
+            </div>
+
+            <div class="kpi-list">
+
+              <div class="kpi-row" data-kpi="quality" data-weight="0.25">
+                <div class="kpi-info">
+                  <div class="kpi-title-line">
+                    <span class="kpi-name">1. Work Quality & Accuracy</span>
+                    <span class="kpi-weight-chip">Weight: 25%</span>
+                  </div>
+                  <p class="kpi-desc">Precision of deliverables, adherence to coding standards, and minimal defect rates.</p>
+                </div>
+                <div class="kpi-rating-control">
+                  <div class="star-rating" data-kpi="quality">
+                    <span class="star" data-val="1"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="2"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="3"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="4"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="5"><i class="fa-solid fa-star"></i></span>
+                  </div>
+                  <div class="rating-text-badge" id="badge-quality">Not Rated</div>
+                  <input type="hidden" id="kpi-quality" class="kpi-hidden-val" value="">
+                </div>
+              </div>
+
+              <div class="kpi-row" data-kpi="punctuality" data-weight="0.20">
+                <div class="kpi-info">
+                  <div class="kpi-title-line">
+                    <span class="kpi-name">2. Punctuality & Delivery</span>
+                    <span class="kpi-weight-chip">Weight: 20%</span>
+                  </div>
+                  <p class="kpi-desc">Meeting sprint targets, timely attendance, responsiveness, and project milestone completion.</p>
+                </div>
+                <div class="kpi-rating-control">
+                  <div class="star-rating" data-kpi="punctuality">
+                    <span class="star" data-val="1"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="2"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="3"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="4"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="5"><i class="fa-solid fa-star"></i></span>
+                  </div>
+                  <div class="rating-text-badge" id="badge-punctuality">Not Rated</div>
+                  <input type="hidden" id="kpi-punctuality" class="kpi-hidden-val" value="">
+                </div>
+              </div>
+
+              <div class="kpi-row" data-kpi="teamwork" data-weight="0.20">
+                <div class="kpi-info">
+                  <div class="kpi-title-line">
+                    <span class="kpi-name">3. Teamwork & Culture</span>
+                    <span class="kpi-weight-chip">Weight: 20%</span>
+                  </div>
+                  <p class="kpi-desc">Collaboration with cross-functional members, peer mentorship, and team camaraderie.</p>
+                </div>
+                <div class="kpi-rating-control">
+                  <div class="star-rating" data-kpi="teamwork">
+                    <span class="star" data-val="1"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="2"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="3"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="4"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="5"><i class="fa-solid fa-star"></i></span>
+                  </div>
+                  <div class="rating-text-badge" id="badge-teamwork">Not Rated</div>
+                  <input type="hidden" id="kpi-teamwork" class="kpi-hidden-val" value="">
+                </div>
+              </div>
+
+              <div class="kpi-row" data-kpi="problemSolving" data-weight="0.20">
+                <div class="kpi-info">
+                  <div class="kpi-title-line">
+                    <span class="kpi-name">4. Problem Solving & Initiative</span>
+                    <span class="kpi-weight-chip">Weight: 20%</span>
+                  </div>
+                  <p class="kpi-desc">Analytical thinking, tackling roadblocks proactively, and proposing innovative solutions.</p>
+                </div>
+                <div class="kpi-rating-control">
+                  <div class="star-rating" data-kpi="problemSolving">
+                    <span class="star" data-val="1"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="2"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="3"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="4"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="5"><i class="fa-solid fa-star"></i></span>
+                  </div>
+                  <div class="rating-text-badge" id="badge-problemSolving">Not Rated</div>
+                  <input type="hidden" id="kpi-problemSolving" class="kpi-hidden-val" value="">
+                </div>
+              </div>
+
+              <div class="kpi-row" data-kpi="communication" data-weight="0.15">
+                <div class="kpi-info">
+                  <div class="kpi-title-line">
+                    <span class="kpi-name">5. Communication & Leadership</span>
+                    <span class="kpi-weight-chip">Weight: 15%</span>
+                  </div>
+                  <p class="kpi-desc">Clear verbal and written documentation, client etiquette, and constructive dialogue.</p>
+                </div>
+                <div class="kpi-rating-control">
+                  <div class="star-rating" data-kpi="communication">
+                    <span class="star" data-val="1"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="2"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="3"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="4"><i class="fa-solid fa-star"></i></span>
+                    <span class="star" data-val="5"><i class="fa-solid fa-star"></i></span>
+                  </div>
+                  <div class="rating-text-badge" id="badge-communication">Not Rated</div>
+                  <input type="hidden" id="kpi-communication" class="kpi-hidden-val" value="">
+                </div>
+              </div>
+
+            </div>
+
+            <div class="field-error" id="error-kpis"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-comment-dots"></i> Manager Feedback & Justification
+              </div>
+              <span id="comment-rule-indicator" class="rule-badge rule-normal">Standard Feedback</span>
+            </div>
+
+            <div class="form-group">
+              <div class="comment-instruction" id="comment-instruction-text">
+                General review feedback. If any rating is below 3 stars, a detailed comment (min 20 characters) is required.
+              </div>
+              <textarea id="review-comment" class="form-control" rows="4" placeholder="Enter constructive feedback, observed strengths, and areas requiring development..."></textarea>
+              <div class="comment-footer">
+                <span class="char-counter" id="char-counter">0 characters</span>
+                <span class="field-error" id="error-comment"></span>
+              </div>
+            </div>
+
+            <div id="validation-alert" class="alert-box alert-danger" style="display: none;">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              <span id="validation-alert-msg">Please review and fix form errors before submitting.</span>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" id="btn-save-draft" class="btn btn-outline save">
+                <i class="fa-solid fa-floppy-disk"></i> Save Draft
+              </button>
+              <button type="button" id="btn-submit-review" class="btn btn-primary">
+                <i class="fa-solid fa-paper-plane"></i> Submit Review
+              </button>
+              <button type="button" id="btn-reset-form" class="btn btn-ghost">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-side-column">
+          <div class="card sticky-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-calculator"></i> Live Weighted Score
+              </div>
+            </div>
+
+            <div class="score-hero">
+              <div class="score-circle" id="score-circle-element">
+                <span class="score-large" id="live-weighted-score">0.00</span>
+                <span class="score-max">/ 5.00</span>
+              </div>
+              <div class="tier-pill" id="score-tier-pill">Not Rated Yet</div>
+            </div>
+
+            <div class="score-comparison-card" id="comparison-box">
+              <div class="comp-item">
+                <span class="comp-label">Prev Quarter</span>
+                <span class="comp-value" id="comp-prev-val">--</span>
+              </div>
+              <div class="comp-divider">
+                <i class="fa-solid fa-arrow-right"></i>
+              </div>
+              <div class="comp-item">
+                <span class="comp-label">Current Q4</span>
+                <span class="comp-value" id="comp-curr-val">0.00</span>
+              </div>
+              <div class="comp-delta" id="comp-delta-badge">0.00</div>
+            </div>
+
+            <div class="card-section-title">
+              <i class="fa-solid fa-chart-pie"></i> KPI Radar Assessment
+            </div>
+            <div class="chart-container">
+              <canvas id="kpiRadarChart"></canvas>
+            </div>
+
+            <div class="side-card-actions">
+              <button type="button" id="btn-export-pdf" class="btn btn-outline btn-block">
+                <i class="fa-solid fa-file-pdf"></i> Export Review Sheet
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="tab-reviews" class="tab-pane">
+      <div class="card">
+        <div class="card-header reviews-header-flex">
+          <div>
+            <div class="card-title">
+              <i class="fa-solid fa-table-list"></i> Submitted Performance Reviews
+            </div>
+            <p class="card-subtitle">Complete historical archive of evaluated employee reviews.</p>
+          </div>
+          <div class="table-actions-bar">
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="review-search-input" class="form-control" placeholder="Search by name, role, ID...">
+            </div>
+            <select id="review-department-filter" class="form-control" style="width: auto;">
+              <option value="all">All Departments</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Design">Design</option>
+              <option value="Quality Assurance">Quality Assurance</option>
+              <option value="Operations">Operations</option>
+              <option value="Product">Product</option>
+              <option value="Human Resources">Human Resources</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="all-reviews-table">
+            <thead>
+              <tr>
+                <th>Review ID</th>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Quarter</th>
+                <th>Weighted Score</th>
+                <th>Performance Status</th>
+                <th>Reviewer</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="all-reviews-tbody">
+              <tr>
+                <td colspan="8" class="text-center py-4">Loading review records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-at-risk" class="tab-pane">
+      <div class="card border-danger-card">
+        <div class="at-risk-header">
+          <div class="at-risk-header-content">
+            <div class="at-risk-badge-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <div class="at-risk-title-line">
+                <h2 class="at-risk-title">HR Intervention & At-Risk Employees</h2>
+                <span class="grep-code-chip">$.grep(reviews, r => r.avg &lt; 3)</span>
+              </div>
+              <p class="at-risk-desc">Employees with a weighted average rating below 3.0 require structured HR intervention and Performance Improvement Plans (PIP).</p>
+            </div>
+          </div>
+          <div class="at-risk-summary-box">
+            <span class="at-risk-num" id="at-risk-stat-number">0</span>
+            <span class="at-risk-stat-label">Employees At Risk</span>
+          </div>
+        </div>
+
+        <div id="at-risk-list-container" class="at-risk-grid"></div>
+      </div>
+    </section>
+
   </div>
 
-  <!-- Add Candidate Modal with RegEx Validation -->
-  <div class="modal-overlay" id="add-candidate-modal">
-    <div class="modal-content">
+  <div id="review-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-dialog">
       <div class="modal-header">
-        <h2>Add New Candidate</h2>
-        <button class="modal-close" id="btn-close-add-modal" aria-label="Close modal">&times;</button>
+        <h3 class="modal-title" id="modal-review-title">Performance Review Details</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-modal">&times;</button>
       </div>
-      <form id="add-candidate-form" novalidate>
-        <div class="modal-body">
-          <!-- Full Name -->
-          <div class="form-group">
-            <label for="cand-name">Full Name *</label>
-            <input 
-              type="text" 
-              id="cand-name" 
-              class="form-control" 
-              placeholder="e.g. Priya Sharma" 
-              required
-            >
-            <div class="validation-feedback" id="feedback-name">
-              Name must contain 3-50 letters/spaces only (no special characters).
-            </div>
-          </div>
-
-          <!-- Email -->
-          <div class="form-group">
-            <label for="cand-email">Email Address *</label>
-            <input 
-              type="email" 
-              id="cand-email" 
-              class="form-control" 
-              placeholder="e.g. priya.sharma@example.com" 
-              required
-            >
-            <div class="validation-feedback" id="feedback-email">
-              Please enter a valid email address (e.g. name@company.com).
-            </div>
-          </div>
-
-          <!-- Target Role -->
-          <div class="form-group">
-            <label for="cand-role">Job Role *</label>
-            <select id="cand-role" class="form-control" required>
-              <option value="">-- Select Role --</option>
-              <option value="Frontend Dev">Frontend Dev</option>
-              <option value="Backend Dev">Backend Dev</option>
-              <option value="Full Stack Dev">Full Stack Dev</option>
-              <option value="UI/UX Designer">UI/UX Designer</option>
-              <option value="QA Engineer">QA Engineer</option>
-              <option value="DevOps Engineer">DevOps Engineer</option>
-              <option value="Product Manager">Product Manager</option>
-              <option value="Data Analyst">Data Analyst</option>
-              <option value="Payroll Specialist">Payroll Specialist</option>
-              <option value="HR Executive">HR Executive</option>
-            </select>
-            <div class="validation-feedback" id="feedback-role">
-              Please select a job role.
-            </div>
-          </div>
-
-          <!-- Technical Score & Interview Date -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label for="cand-score">Score (0.0 to 10.0) *</label>
-              <input 
-                type="number" 
-                id="cand-score" 
-                class="form-control" 
-                min="0" 
-                max="10" 
-                step="0.1" 
-                placeholder="8.5" 
-                required
-              >
-              <div class="validation-feedback" id="feedback-score">
-                Score must be a number between 0.0 and 10.0.
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="cand-date">Interview Date *</label>
-              <input 
-                type="date" 
-                id="cand-date" 
-                class="form-control" 
-                required
-              >
-              <div class="validation-feedback" id="feedback-date">
-                Please pick a valid date.
-              </div>
-            </div>
-          </div>
-
-          <!-- Initial Stage -->
-          <div class="form-group">
-            <label for="cand-stage">Initial Pipeline Stage</label>
-            <select id="cand-stage" class="form-control">
-              <option value="applied" selected>Applied</option>
-              <option value="screening">Screening</option>
-              <option value="interview">Interview</option>
-              <option value="hired_rejected">Hired / Rejected</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="btn-cancel-add">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btn-submit-candidate">
-            <i class="fa-solid fa-check"></i> Save Candidate
-          </button>
-        </div>
-      </form>
+      <div class="modal-body" id="modal-review-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btn-modal-print">
+          <i class="fa-solid fa-print"></i> Print Review
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-modal-dismiss">Close</button>
+      </div>
     </div>
   </div>
 
-  <!-- Toast Notification Container with Undo Support -->
-  <div class="toast-container" id="toast-container"></div>
+  <div id="toast-container" class="toast-container"></div>
 
-  <!-- jQuery & jQuery UI Dependencies -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-  <!-- jQuery UI Touch Punch for Mobile & Tablet Touch drag-and-drop -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
-
-  <!-- Application Logic -->
   <script src="js/app.js"></script>
 </body>
 </html>
